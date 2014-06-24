@@ -8,14 +8,17 @@ module ClearCASE
 #----------------------------------------------------------------------------------------------
 
 class LabelType
-	include Bento::Class
-
 	attr_reader :name
 
-	def initialize(*opt)
-		return if init_with_tag(:create, opt)
+	def initialize(name: '', root_vob: nil)
+		@name = name
+		@root_vob = root_vob if root_vob != nil
 
-		init([:name], [], [], opt)
+		@admin_vob = defined?(@root_vob) ? @root_vob : DEFAULT_ADMIN_VOB
+
+		return if exists?
+		mklbtype = System.command("cleartool mklbtype -nc #{@name}@/#{@admin_vob}")
+		raise "Cannot create label #{name}" if mklbtype.failed?
 	end
 
 	def LabelType.create(*opt)
@@ -29,18 +32,6 @@ class LabelType
 
 	def exists?
 		System.command("cleartool describe lbtype:#{@name}@/#{admin_vob}").ok?
-	end
-
-private
-	def create(opt)
-		init([:name], [:root_vob], [], opt)
-
-		@admin_vob = defined?(@root_vob) ? @root_vob : DEFAULT_ADMIN_VOB
-
-		if !exists?
-			mklbtype = System.command("cleartool mklbtype -nc #{@name}@/#{@admin_vob}")
-			raise "Cannot create label #{name}" if mklbtype.failed?
-		end
 	end
 end # LabelType
 
