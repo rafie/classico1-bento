@@ -12,31 +12,17 @@ class View
 
 	attr_reader :name
 
-	def initialize(name: '', root_vob: nil)
+	def initialize(name, *opt, root_vob: nil)
+		return if tagged_init(:create, opt, [name, *opt, root_vob: root_vob])
+
 		@name = name
 		@root_vob = root_vob if root_vob != nil
 
 		fix_name
 	end
 
-	def View.create(*opt)
-		@name = name
-		@root_vob = root_vob if root_vob != nil
-
-		fix_name
-
-		region = DEFAULT_WIN_REGION
-		host = System.hostname
-		stg = LocalStorageLocation.new
-		local_stg = "#{stg.local_stg}\\#{@name}.vws"
-		global_stg = "#{stg.global_stg}\\#{@name}.vws"
-
-		mkview_cmd = "cleartool mkview -tag #{@name} -tmode unix -region #{region} -shareable_dos " + 
-			"-host #{host} -hpath #{local_stg} -gpath #{global_stg} #{local_stg}"
-		mkview = System.command(mkview_cmd)	
-		raise "failed to create view #{@name}" if mkview.failed?
-
-		ClearCASE::Explorer.add_view_shortcut(@name)
+	def View.create(name, *opt, root_vob: nil)
+		View.new(name, :create, *opt)
 	end
 
 	#------------------------------------------------------------------------------------------
@@ -105,6 +91,26 @@ class View
 	#------------------------------------------------------------------------------------------
 	private
 	#------------------------------------------------------------------------------------------
+
+	def create(name, *opt, root_vob: nil)
+		@name = name
+		fix_name
+
+		@root_vob = root_vob if root_vob != nil
+
+		region = DEFAULT_WIN_REGION
+		host = System.hostname
+		stg = LocalStorageLocation.new
+		local_stg = "#{stg.local_stg}\\#{@name}.vws"
+		global_stg = "#{stg.global_stg}\\#{@name}.vws"
+
+		mkview_cmd = "cleartool mkview -tag #{@name} -tmode unix -region #{region} -shareable_dos " + 
+			"-host #{host} -hpath #{local_stg} -gpath #{global_stg} #{local_stg}"
+		mkview = System.command(mkview_cmd)	
+		raise "failed to create view #{@name}" if mkview.failed?
+
+		ClearCASE::Explorer.add_view_shortcut(@name)
+	end
 
 	def fix_name
 		if @name =~ /^([^\\]*)\/(.*)/

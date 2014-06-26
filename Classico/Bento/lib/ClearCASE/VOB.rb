@@ -1,6 +1,6 @@
 
 require_relative 'Common'
-require 'FileUtils'
+require 'fileutils'
 
 #----------------------------------------------------------------------------------------------
 
@@ -13,20 +13,21 @@ class VOB
 
 	attr_reader :name
 
-	def initialize(*opt)
-		return if init_with_tag(:create, opt)
-		return if init_with_tag(:unpack, opt)
+	def initialize(name, *opt)
+		return if tagged_init(:create, opt, [name, *opt])
+		return if tagged_init(:unpack, opt, [name, *opt])
 
+		init_flags [:jazz], opt
 		init([:name], [], [:jazz], opt) 
-		@name = VOB.fix_name(@name)
+		@name = VOB.fix_name(name)
 	end
 
-	def VOB.create(name)
-		VOB.new(opt, :create)
+	def VOB.create(name, *opt)
+		VOB.new(name, :create, *opt)
 	end
 	
-	def VOB.unpack(*opt)
-		VOB.new(opt, :unpack)
+	def VOB.unpack(name, *opt, file: nil)
+		VOB.new(name, :create, *opt, file: file)
 	end
 
 	#-------------------------------------------------------------------------------------------
@@ -155,20 +156,22 @@ class VOB
 	private
 	#-------------------------------------------------------------------------------------------
 
-	def create(opt)
-		init([:name], [], [:jazz], opt) 
+	def create(name, *opt)
+		init_flags [:jazz], opt
 
-		@name = VOB.fix_name(@name)
+		@name = VOB.fix_name(name)
 		global_vbs = VOB.global_vbs(@name)
 		mkvob = System.command("cleartool mkvob -nc -tag #{tag} #{global_vbs}")
 		raise "cannot create VOB #{name}" if mkvob.failed?
 		return VOB.new(name)
 	end
 	
-	def unpack(opt)
-		init([:name, :file], [], [:jazz], opt)
+	def unpack(name, *opt, file: nil)
+		init_flags [:jazz], opt
 
-		@name = VOB.fix_name(@name)
+		@name = VOB.fix_name(name)
+		@file = file
+
 		packed = PackedVOB.new(file: @file)
 		vob1 = nil
 		if @jazz
@@ -202,14 +205,15 @@ class PackedVOB
 	
 	attr_reader :name
 
-	def initialize(*opt)
-		return if init_with_tag(:create, opt)
+	def initialize(name, *opt, file: nil)
+		return if init_with_tag(:create, opt, [name, *opt, file: file])
 
-		init([:file], [], [], opt)
+		@name = name
+		@file = file
 	end
 
-	def PackedVOB.create(*opt)
-		PackedVOB.new(opt, :create)
+	def PackedVOB.create(name, *opt, file: nil)
+		PackedVOB.new(name, :create, *opt, file: file)
 	end
 
 	#-------------------------------------------------------------------------------------------
@@ -259,8 +263,9 @@ class PackedVOB
 	private
 	#-------------------------------------------------------------------------------------------
 
-	def create(opt)
-		init([:name, :file], [], [], opt)
+	def create(name, *opt, file: nil)
+		@name = name
+		@file = file
 		pack(name)
 	end
 
