@@ -18,7 +18,6 @@ class VOB
 		return if tagged_init(:unpack, opt, [name, *opt])
 
 		init_flags [:jazz], opt
-		init([:name], [], [:jazz], opt) 
 		@name = VOB.fix_name(name)
 	end
 
