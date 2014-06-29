@@ -1,5 +1,5 @@
 
-require 'byebug'
+# require 'byebug'
 
 module Bento
 
@@ -64,8 +64,8 @@ end # module Bento
 
 #----------------------------------------------------------------------------------------------
 
-module Kernel
-  alias_method :bb, :byebug
-end
+#module Kernel
+#  alias_method :bb, :byebug
+#end
 
 #----------------------------------------------------------------------------------------------
