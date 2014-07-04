@@ -122,7 +122,7 @@ private
 	def _append(log, file)
 		text = ""
 		File.open(file.path) do |f|
-			f.lines.each do |line|
+			f.each_line do |line|
 				log.write line if log
 				text += line
 			end

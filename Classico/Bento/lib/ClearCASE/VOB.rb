@@ -76,7 +76,7 @@ class VOB
 	end
 
 	def VOB.jazz_name(name)
-		name += "_" + Bento.rand_name
+		name += (name.empty? ? "" : "_") + Bento.rand_name
 	end
 
 	def VOB.global_vbs(name)
@@ -205,7 +205,7 @@ class PackedVOB
 	attr_reader :name
 
 	def initialize(name, *opt, file: nil)
-		return if init_with_tag(:create, opt, [name, *opt, file: file])
+		return if tagged_init(:create, opt, [name, *opt, file: file])
 
 		@name = name
 		@file = file

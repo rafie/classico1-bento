@@ -1,4 +1,5 @@
 
+require 'fileutils'
 require_relative 'Common'
 
 #----------------------------------------------------------------------------------------------
@@ -21,7 +22,7 @@ class LocalStorageLocation < StorageLocation
 	def initialize
 		if find_in_reg || find_local_view || make_stgloc
 			vobs = "#{@local_stg}/.vobs"
-			File.mkdir(vobs) if ! Dir.exists?(vobs)
+			FileUtils.mkdir_p(vobs) if ! Dir.exists?(vobs)
 			return true
 		end
 		raise "cannot determine storage location"
@@ -86,7 +87,7 @@ class LocalStorageLocation < StorageLocation
 		@local_stg = "c:\\#{share}";
 		@global_stg = "\\\\#{host}\\#{share}";
 	
-		Dir.mkdir(@local_stg)
+		FileUtils.mkdir_p(@local_stg)
 		net_share = System.commandx("net share #{share}=#{@local_stg} /remark:\"ClearCASE Views Storage\" /unlimited")
 		
 		base = "Software\\Atria\\ClearCase\\CurrentVersion\\clearviewtool"

@@ -14,14 +14,18 @@ module ClearCASE
 
 DEFAULT_ADMIN_VOB = "TBU_PVOB_2"
 # DEFAULT_ADMIN_VOB = ".test"
-DEFAULT_GROUP = "rvil_ccusers"
-DEFAULT_WIN_REGION = "radvision_nt"
-DEFAULT_UNIX_REGION = "radvision"
+DEFAULT_GROUP = "rvccgrp01"
+DEFAULT_WIN_REGION = "ccav_win"
+DEFAULT_UNIX_REGION = "ccav_unix"
 
 #----------------------------------------------------------------------------------------------
 
 def ClearCASE.rootdir
-  Win32::Registry::HKEY_LOCAL_MACHINE.open("SOFTWARE\\Atria\\ClearCase\\CurrentVersion")["HostData"]
+  begin
+    Win32::Registry::HKEY_LOCAL_MACHINE.open("SOFTWARE\\Atria\\ClearCase\\CurrentVersion")["HostData"]
+  rescue
+  	Win32::Registry::HKEY_LOCAL_MACHINE.open("SOFTWARE\\Wow6432Node\\Atria\\ClearCase\\CurrentVersion")["HostData"]
+  end
 end
 
 #----------------------------------------------------------------------------------------------

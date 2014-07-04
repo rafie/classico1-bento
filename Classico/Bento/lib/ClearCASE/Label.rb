@@ -10,7 +10,7 @@ module ClearCASE
 class LabelType
 	attr_reader :name
 
-	def initialize(name: '', root_vob: nil)
+	def initialize(name, root_vob: nil)
 		@name = name
 		@root_vob = root_vob if root_vob != nil
 
