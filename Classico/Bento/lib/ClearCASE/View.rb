@@ -12,8 +12,9 @@ class View
 
 	attr_reader :name
 
-	def initialize(name, *opt, root_vob: nil)
-		return if tagged_init(:create, opt, [name, *opt, root_vob: root_vob])
+	def initialize(name, *opt, root_vob: nil,
+		configspec: nil)
+		return if tagged_init(:create, opt, [name, *opt, root_vob: root_vob, configspec: configspec])
 
 		@name = name
 		@root_vob = root_vob if root_vob != nil
@@ -21,8 +22,8 @@ class View
 		fix_name
 	end
 
-	def View.create(name, *opt, root_vob: nil)
-		View.new(name, :create, *opt)
+	def View.create(name, *opt, root_vob: nil, configspec: nil)
+		View.new(name, :create, *opt, root_vob: root_vob, configspec: configspec)
 	end
 
 	#------------------------------------------------------------------------------------------
@@ -89,10 +90,17 @@ class View
 	end
 
 	#------------------------------------------------------------------------------------------
+
+	def remove!
+		# endview = System.command("cleartool endview -server #{@name}")
+		rmview = System.command("cleartool rmview -tag #{@name}")
+	end
+
+	#------------------------------------------------------------------------------------------
 	private
 	#------------------------------------------------------------------------------------------
 
-	def create(name, *opt, root_vob: nil)
+	def create(name, *opt, root_vob: nil, configspec: nil)
 		@name = name
 		fix_name
 
@@ -109,7 +117,12 @@ class View
 		mkview = System.command(mkview_cmd)	
 		raise "failed to create view #{@name}" if mkview.failed?
 
-		ClearCASE::Explorer.add_view_shortcut(@name)
+		if configspec
+			setcs_cmd = "cleartool setcs -tag #{@name} " + Bento.tempfile(configspec)
+			setcs = System.commandx(setcs_cmd, what: "set configspec for view #{@name}")
+		end
+
+		ClearCASE::Explorer.add_view_shortcut(@name) rescue ''
 	end
 
 	def fix_name

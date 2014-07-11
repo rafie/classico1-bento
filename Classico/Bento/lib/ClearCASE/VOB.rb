@@ -26,7 +26,7 @@ class VOB
 	end
 	
 	def VOB.unpack(name, *opt, file: nil)
-		VOB.new(name, :create, *opt, file: file)
+		VOB.new(name, :unpack, *opt, file: file)
 	end
 
 	#-------------------------------------------------------------------------------------------
@@ -76,7 +76,7 @@ class VOB
 	end
 
 	def VOB.jazz_name(name)
-		name += (name.empty? ? "" : "_") + Bento.rand_name
+		name += (name.empty? ? "." : "_") + Bento.rand_name
 	end
 
 	def VOB.global_vbs(name)
@@ -171,7 +171,7 @@ class VOB
 		@name = VOB.fix_name(name)
 		@file = file
 
-		packed = PackedVOB.new(file: @file)
+		packed = PackedVOB.new(name, *opt, file: @file)
 		vob1 = nil
 		if @jazz
 			vob1 = packed.unpack(@name, :jazz)
