@@ -11,6 +11,7 @@ class View
 	include Bento::Class
 
 	attr_reader :name
+	attr_writer :configspec
 
 	def initialize(name, *opt, root_vob: nil,
 		configspec: nil)
@@ -58,6 +59,11 @@ class View
 	def root_vob
 		return VOB.new(@root_vob) if @root_vob
 		nil
+	end
+
+	def configspec=(spec)
+		setcs_cmd = "cleartool setcs -tag #{@name} " + Bento.tempfile(spec)
+		setcs = System.commandx(setcs_cmd, what: "set configspec for view #{@name}")
 	end
 
 	#------------------------------------------------------------------------------------------
@@ -117,10 +123,7 @@ class View
 		mkview = System.command(mkview_cmd)	
 		raise "failed to create view #{@name}" if mkview.failed?
 
-		if configspec
-			setcs_cmd = "cleartool setcs -tag #{@name} " + Bento.tempfile(configspec)
-			setcs = System.commandx(setcs_cmd, what: "set configspec for view #{@name}")
-		end
+		self.configspec = configspec if configspec
 
 		ClearCASE::Explorer.add_view_shortcut(@name) rescue ''
 	end

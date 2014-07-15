@@ -24,7 +24,7 @@ class DB
 	def cleanup
 		@db.close
 		File.unlink(@path) if @temp
-		puts "DB cleanup: " + @path if @temp
+#		puts "DB cleanup: " + @path if @temp
 	end
 
 	def execute(*args)
@@ -68,7 +68,6 @@ class DB
 
 		File.unlink(@path) rescue ''
 		init
-		puts "DB created: " + @path
 
 		@db.execute_batch(File.read(schema)) if schema != nil
 		@db.execute_batch(File.read(data)) if data != nil
