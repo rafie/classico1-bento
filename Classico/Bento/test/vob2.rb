@@ -4,10 +4,16 @@ require 'Bento.rb'
 class VOB1 < Minitest::Test
 
 	def setup
-		@projects = Confetti.All.Projects.new
+		@vob = Bento::ClearCASE::VOB.unpack('', :jazz, file: 'test.vob.zip')
+		@view = Bento::ClearCASE::View.create(ENV['USERNAME'] + '_' + Bento.rand_name, root_vob: @vob.name)
 	end
 
-	def test_packed_vob
+	def teardown
+		@view.remove!
+		@vob.remove!
+	end
 
+	def test_1
+		
 	end 
 end

@@ -40,7 +40,7 @@ class View
 		if !@type
 			@type = :dynamic			
 			lsview = System.commandx("cleartool lsview -long #{name}", :nolog)
-			lsview.out.lines.each do |line|				
+			lsview.out.lines.each do |line|
 				if line =~ /^View attributes: (.*)/
 					snap = $1
 					#only snapshot views return the "View attributes" line.
