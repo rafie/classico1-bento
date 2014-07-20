@@ -13,22 +13,31 @@ class VOB
 
 	attr_reader :name
 
-	def initialize(name, *opt)
-		return if tagged_init(:create, opt, [name, *opt])
-		return if tagged_init(:unpack, opt, [name, *opt])
-
+	def def(name, *opt)
 		init_flags [:jazz], opt
 		@name = VOB.fix_name(name)
 	end
 
-	def VOB.create(name, *opt)
-		VOB.new(name, :create, *opt)
+	def create(name, *opt, file: nil)
+		init_flags [:jazz], opt
+		opt.delete(:jazz) # don't pass it on
+
+		@name = VOB.fix_name(name)
+		@jazz = true if @name.empty?
+		@name = VOB.jazz_name(@name)
+
+		if !file
+			global_vbs = VOB.global_vbs(@name)
+			mkvob = System.command("cleartool mkvob -nc -tag #{tag} #{global_vbs}")
+			raise "cannot create VOB #{@name}" if mkvob.failed?
+			return
+		end
+
+		@file = file
+
+		ClearCASE.PackedVOB(@file).unpack(@name)
 	end
 	
-	def VOB.unpack(name, *opt, file: nil)
-		VOB.new(name, :unpack, *opt, file: file)
-	end
-
 	#-------------------------------------------------------------------------------------------
 
 	def tag
@@ -36,19 +45,19 @@ class VOB
 	end
 	
 	def uuid
-		_query if !defined?(@uuid); @uuid
+		query if !defined?(@uuid); @uuid
 	end
 
 	def region
-		_query if !defined?(@region); @region
+		query if !defined?(@region); @region
 	end
 
 	def local_vbs
-		_query if !defined?(@local_vbs); @local_vbs
+		query if !defined?(@local_vbs); @local_vbs
 	end
 
 	def global_vbs
-		_query if !defined?(@global_vbs); @global_vbs
+		query if !defined?(@global_vbs); @global_vbs
 	end
 
 	def exist?
@@ -56,7 +65,7 @@ class VOB
 	end
 
 	def mounted?
-		_query if !defined?(@mounted); @mounted
+		query if !defined?(@mounted); @mounted
 	end
 
 	def locked?
@@ -71,20 +80,20 @@ class VOB
 
 	#-------------------------------------------------------------------------------------------
 
-	def VOB.fix_name(name)
+	def self.fix_name(name)
 		name =~ /^[\/\\]/ ? name[1..-1] : name
 	end
 
-	def VOB.jazz_name(name)
-		name += (name.empty? ? "." : "_") + Bento.rand_name
+	def self.jazz_name(name)
+		name = "." + (name.empty? ? "" : name + "_") + Bento.rand_name
 	end
 
-	def VOB.global_vbs(name)
+	def self.global_vbs(name)
 		storage = ClearCASE::LocalStorageLocation.new
 		"#{storage.global_stg}\\.vobs\\#{name}.vbs"
 	end
 	
-	def VOB.local_vbs(name)
+	def self.local_vbs(name)
 		storage = ClearCASE::LocalStorageLocation.new
 		"#{storage.local_stg}\\.vobs\\#{name}.vbs"
 	end
@@ -92,7 +101,7 @@ class VOB
 	#-------------------------------------------------------------------------------------------
 
 	def pack(file)
-		PackedVOB.create(name: @name, file: file)
+		PackedVOB::create(@name, file: file)
 	end
 
 	#-------------------------------------------------------------------------------------------
@@ -152,38 +161,8 @@ class VOB
 	end
 
 	#-------------------------------------------------------------------------------------------
-	private
-	#-------------------------------------------------------------------------------------------
 
-	def create(name, *opt)
-		init_flags [:jazz], opt
-
-		@name = VOB.fix_name(name)
-		global_vbs = VOB.global_vbs(@name)
-		mkvob = System.command("cleartool mkvob -nc -tag #{tag} #{global_vbs}")
-		raise "cannot create VOB #{name}" if mkvob.failed?
-		return VOB.new(name)
-	end
-	
-	def unpack(name, *opt, file: nil)
-		init_flags [:jazz], opt
-
-		@name = VOB.fix_name(name)
-		@file = file
-
-		packed = PackedVOB.new(name, *opt, file: @file)
-		vob1 = nil
-		if @jazz
-			vob1 = packed.unpack(@name, :jazz)
-		else
-			vob1 = packed.unpack(@name)
-		end
-		@name = vob1.name
-	end
-
-	#-------------------------------------------------------------------------------------------
-
-	def _query
+	def query
 		lsvob = System.command("cleartool lsvob -long #{tag}")
 		raise "cannot query information about VOB #{@name}" if lsvob.failed?
 		lsvob.out.lines.each do |line|
@@ -195,24 +174,53 @@ class VOB
 		end
 		@mounted = @mounted == "YES"
 	end
+
+	#-------------------------------------------------------------------------------------------
+
+	def self.def(*args)
+		x = self.new; x.send(:def, *args); x
+	end
+
+	def self.create(*args)
+		x = self.send(:new); x.send(:create, *args); x
+	end
+	
+	private :query
+
+	private :def, :create
+	private_class_method :new
+
 end # class VOB
+
+def self.VOB(*args)
+	x = ClearCASE::VOB.send(:new); x.send(:def, *args); x
+end
 
 #----------------------------------------------------------------------------------------------
 
 class PackedVOB
 	include Bento::Class
 	
-	attr_reader :name
-
-	def initialize(name, *opt, file: nil)
-		return if tagged_init(:create, opt, [name, *opt, file: file])
-
-		@name = name
+	def def(file, *opt)
 		@file = file
 	end
 
-	def PackedVOB.create(name, *opt, file: nil)
-		PackedVOB.new(name, :create, *opt, file: file)
+	def create(name, *opt, file: nil)
+		file = name + ".vob.zip" if !file
+		raise "cannot pack, file #{@file} exists" if File.exists?(file)
+		@file = file
+
+		vob = ClearCASE.VOB(name)
+		vob.lock
+		begin
+			path = File.absolute_path(@file)
+			Dir.chdir(vob.local_vbs) do
+				zip = System.command("zip -r #{path} *")
+				raise "failed to create zip file #{@file}" if zip.failed?
+			end
+		ensure
+			vob.unlock
+		end
 	end
 
 	#-------------------------------------------------------------------------------------------
@@ -224,7 +232,7 @@ class PackedVOB
 		name = VOB.jazz_name(name) if jazz
 
 		raise "cannot unpack, file #{@file} does not exists" if !File.exists?(@file)
-		raise "cannot unpack, vob #{name} exists" if VOB.new(name).exist?
+		raise "cannot unpack, vob #{name} exists" if VOB(name).exist?
 
 		vbs = VOB.local_vbs(name)
 		raise "cannot unpack, VOB storage dircotry #{vbs} exists" if File.exists?(vbs)
@@ -252,37 +260,13 @@ class PackedVOB
 		end
 
 		fix_permissions(name)
-		vob = VOB.new(name)
+		vob = VOB(name)
 		vob.register
 		vob.mount
-		return vob
+		vob
 	end
 
 	#-------------------------------------------------------------------------------------------
-	private
-	#-------------------------------------------------------------------------------------------
-
-	def create(name, *opt, file: nil)
-		@name = name
-		@file = file
-		pack(name)
-	end
-
-	def pack(name)
-		raise "cannot pack, file #{@file} exists" if File.exists?(@file)
-
-		vob = VOB.new(name)
-		vob.lock
-		begin
-			file = File.absolute_path(@file)
-			Dir.chdir(vob.local_vbs) do
-				zip = System.command("zip -r #{file} *")
-				raise "failed to create zip file #{@file}" if zip.failed?
-			end
-		ensure
-			vob.unlock
-		end
-	end
 
 	def fix_pool_id(file, replica_uuid, vob_oid)
 		File.open(file, 'r+') { |f|
@@ -302,7 +286,26 @@ class PackedVOB
 		fix = System.command("#{fix_prot} -force -root -r -chown #{domain}\\#{user} -chgrp #{domain}\\#{group} #{local_vbs}")
 	end
 
+	#-------------------------------------------------------------------------------------------
+
+	def self.def(*args)
+		x = self.new; x.send(:def, *args); x
+	end
+
+	def self.create(*args)
+		x = self.send(:new); x.send(:create, *args); x
+	end
+	
+	private :fix_pool_id, :fix_permissions
+
+	private :def, :create
+	private_class_method :new
+
 end # PackedVOB
+
+def self.PackedVOB(*args)
+	x = PackedVOB.send(:new); x.send(:def, *args); x
+end
 
 #----------------------------------------------------------------------------------------------
 
@@ -314,7 +317,7 @@ class VOBs
 	end
 
 	def each
-		@names.each { |vname| yield VOB.new(vname) }
+		@names.each { |vname| yield VOB(vname) }
 	end
 
 end # class VOBs
