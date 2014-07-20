@@ -11,7 +11,7 @@ SQL
 	end
 
 	def test_insert
-		@db << ("insert into numbers values (?, ?)", ['jojo', 17]))
+		@db.execute("insert into numbers values (?, ?)", ['jojo', 17])
 		assert_equal 'jojo', @db["select * from numbers where val = ?", 17][:name]
 	end
 end

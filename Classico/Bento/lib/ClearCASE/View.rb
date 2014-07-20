@@ -13,18 +13,34 @@ class View
 	attr_reader :name
 	attr_writer :configspec
 
-	def initialize(name, *opt, root_vob: nil,
-		configspec: nil)
-		return if tagged_init(:create, opt, [name, *opt, root_vob: root_vob, configspec: configspec])
-
+	def def(name, *opt, root_vob: nil)
 		@name = name
 		@root_vob = root_vob if root_vob != nil
 
 		fix_name
 	end
 
-	def View.create(name, *opt, root_vob: nil, configspec: nil)
-		View.new(name, :create, *opt, root_vob: root_vob, configspec: configspec)
+	def create(name, *opt, root_vob: nil, configspec: nil)
+		@name = name
+		@raw_name = opt.include? :raw
+		fix_name
+
+		@root_vob = root_vob if root_vob != nil
+
+		region = DEFAULT_WIN_REGION
+		host = System.hostname
+		stg = LocalStorageLocation.new
+		local_stg = "#{stg.local_stg}\\#{@name}.vws"
+		global_stg = "#{stg.global_stg}\\#{@name}.vws"
+
+		mkview_cmd = "cleartool mkview -tag #{@name} -tmode unix -region #{region} -shareable_dos " + 
+			"-host #{host} -hpath #{local_stg} -gpath #{global_stg} #{local_stg}"
+		mkview = System.command(mkview_cmd)	
+		raise "failed to create view #{@name}" if mkview.failed?
+
+		self.configspec = configspec if configspec
+
+		ClearCASE::Explorer.add_view_shortcut(@name) rescue ''
 	end
 
 	#------------------------------------------------------------------------------------------
@@ -103,30 +119,6 @@ class View
 	end
 
 	#------------------------------------------------------------------------------------------
-	private
-	#------------------------------------------------------------------------------------------
-
-	def create(name, *opt, root_vob: nil, configspec: nil)
-		@name = name
-		fix_name
-
-		@root_vob = root_vob if root_vob != nil
-
-		region = DEFAULT_WIN_REGION
-		host = System.hostname
-		stg = LocalStorageLocation.new
-		local_stg = "#{stg.local_stg}\\#{@name}.vws"
-		global_stg = "#{stg.global_stg}\\#{@name}.vws"
-
-		mkview_cmd = "cleartool mkview -tag #{@name} -tmode unix -region #{region} -shareable_dos " + 
-			"-host #{host} -hpath #{local_stg} -gpath #{global_stg} #{local_stg}"
-		mkview = System.command(mkview_cmd)	
-		raise "failed to create view #{@name}" if mkview.failed?
-
-		self.configspec = configspec if configspec
-
-		ClearCASE::Explorer.add_view_shortcut(@name) rescue ''
-	end
 
 	def fix_name
 		if @name =~ /^([^\\]*)\/(.*)/
@@ -136,16 +128,39 @@ class View
 		else
 			@root_vob = '' if !defined?(@root_vob)
 		end
+		@name = Bento.rand_name if @name.empty?
+		@name = System.user.downcase + "_" + @name if !@raw_name
 	end
+
+	#------------------------------------------------------------------------------------------
+
+	def self.def(*args)
+		x = self.new; x.send(:def, *args); x
+	end
+
+	def self.create(*args)
+		x = self.send(:new); x.send(:create, *args); x
+	end
+	
+	private :fix_name
+
+	private :def, :create
+	private_class_method :new
+
 end # class View
+
+def self.View(*args)
+	x = ClearCASE::View.send(:new); x.send(:def, *args); x
+end
 
 #----------------------------------------------------------------------------------------------
 
 class CurrentView < View
 
-	def initialize
-		@name = System.commandx("cleartool pwv -sh", :nolog).out0
-		raise "Cannot determine current view" if @name == "** NONE **"
+	def def(*opt, root_vob: nil)
+		name = System.commandx("cleartool pwv -sh", :nolog).out0
+		raise "Cannot determine current view" if name == "** NONE **"
+		super(name, *opt, root_vob: root_vob)
 	end
 
 	def current_vob
@@ -154,7 +169,14 @@ class CurrentView < View
 		VOB.new(vob)
 	end
 
+	private :def
+	private_class_method :new
+
 end # class CurrentView
+
+def self.CurrentView(*args)
+	x = ClearCASE::CurrentView.send(:new); x.send(:def, *args); x
+end
 
 #----------------------------------------------------------------------------------------------
 

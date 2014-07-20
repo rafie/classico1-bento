@@ -129,9 +129,7 @@ class VOB
 	#-------------------------------------------------------------------------------------------
 
 	def remove!
-		begin
-			unmount
-		rescue ; end
+		unmount
 		rmvob = System.command("cleartool rmvob -force #{global_vbs}")
 		raise "cannot remove VOB #{@name}" if rmvob.failed?
 	end
@@ -232,7 +230,7 @@ class PackedVOB
 		name = VOB.jazz_name(name) if jazz
 
 		raise "cannot unpack, file #{@file} does not exists" if !File.exists?(@file)
-		raise "cannot unpack, vob #{name} exists" if VOB(name).exist?
+		raise "cannot unpack, vob #{name} exists" if ClearCASE.VOB(name).exist?
 
 		vbs = VOB.local_vbs(name)
 		raise "cannot unpack, VOB storage dircotry #{vbs} exists" if File.exists?(vbs)
@@ -260,7 +258,7 @@ class PackedVOB
 		end
 
 		fix_permissions(name)
-		vob = VOB(name)
+		vob = ClearCASE.VOB(name)
 		vob.register
 		vob.mount
 		vob
