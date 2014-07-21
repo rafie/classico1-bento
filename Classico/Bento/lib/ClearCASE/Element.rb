@@ -111,17 +111,17 @@ class Element
 	def Element.view(name)
 		view, vob, epath = Element.parse(name)
 		raise "cannot determine view for #{name} (no view context)" if view.empty?
-		ClearCASE::View.new(view)
+		ClearCASE.View(view)
 	end
 
 	def Element.vob(name)
 		view, vob, epath = Element.parse(name)
 		raise "cannot determine VOB for #{name}" if vob.empty?
-		ClearCASE::VOB.new(vob)
+		ClearCASE.VOB(vob)
 	end
 	
 	def Element.in_vob?(name, vob)
-		vob_name = vob.is_a?(ClearCASE::VOB) ? vob.name : ClearCASE::VOB.new(vob).name
+		vob_name = vob.is_a?(ClearCASE::VOB) ? vob.name : ClearCASE.VOB(vob).name
 		Element.vob(name).name == vob_name
 	end
 
@@ -150,7 +150,7 @@ class Element
 			closure << p if p != '/'
 		end
 		
-		closure.map! { |name| "#{View.new(view).path}#{name}"} if  view != ""
+		closure.map! { |name| "#{ClearCASE.View(view).path}#{name}"} if  view != ""
 
 		return Elements.new(closure)
 	end
@@ -251,7 +251,7 @@ class Elements
 	end
 
 	def each
-		@names.each { |fname| yield Element.new(fname) }
+		@names.each { |fname| yield ClearCASE.Element(fname) }
 	end
 
 	#------------------------------------------------------------------------------------------
@@ -306,7 +306,7 @@ class Elements
 		return if @names.empty?
 		e1 = @names.first
 		view, vob, epath = Element.parse(e1)
-		root_vob = ClearCASE::View.new(view).root_vob
+		root_vob = ClearCASE.View(view).root_vob
 
 		nocreate = flags.include?(:nocreate)
 

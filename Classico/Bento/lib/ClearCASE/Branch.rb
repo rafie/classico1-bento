@@ -12,20 +12,30 @@ class Branch
 
 	attr_reader :name
 	
-	def initialize(*opt)
-		return if init_with_tag(:create, opt)
-
-		init([:name], [], [], opt)
-		fix_name
+	def is(name, *opt)
+		fix_name(name)
 	end
 
-	def Branch.create(*opt)
-		Branch.new(opt, :create)
+	def create(name, *opt, root_vob: nil)
+		fix_name(name)
+		@root_vob = root_vob
+
+		@admin_vob = defined?(@root_vob) ? @root_vob : DEFAULT_ADMIN_VOB
+
+		mkbrtype = System.command("cleartool mkbrtype -nc #{@name}@/#{@admin_vob}")
+		raise "Cannot create branch #{name}" if mkbrtype.failed?
 	end
+
+	def fix_name(name)
+		@name = name
+		@name += "_br" if ! @name.end_with?("_br")
+	end
+
+	#------------------------------------------------------------------------------------------
 
 #	def Branch.admin_vob
 #		begin
-#			cview = CurrentView.new
+#			cview = ClearCase.CurrentView
 #			admin_vob = cview.admin_vob
 #		rescue
 #			admin_vob = DEFAULT_ADMIN_VOB
@@ -40,7 +50,7 @@ class Branch
 #		return @admin_vob if defined?(@admin_vob)
 #
 #		begin
-#			cview = CurrentView.new
+#			cview = ClearCASE.CurrentView
 #			@admin_vob = cview.admin_vob
 #		rescue
 #			@admin_vob = DEFAULT_ADMIN_VOB
@@ -56,23 +66,24 @@ class Branch
 	end
 
 	#------------------------------------------------------------------------------------------
-	private
-	#------------------------------------------------------------------------------------------
 
-	def create(opt)
-		init([:name], [:root_vob], [], opt)
-		fix_name
-
-		@admin_vob = defined?(@root_vob) ? @root_vob : DEFAULT_ADMIN_VOB
-
-		mkbrtype = System.command("cleartool mkbrtype -nc #{@name}@/#{@admin_vob}")
-		raise "Cannot create branch #{name}" if mkbrtype.failed?
+	def self.is(*args)
+		x = self.new; x.send(:is, *args); x
 	end
 
-	def fix_name
-		@name += "_br" if ! @name.end_with?("_br")
+	def self.create(*args)
+		x = self.send(:new); x.send(:create, *args); x
 	end
+
+	private :fix_name
+
+	private :is, :create
+	private_class_method :new
 end # Branch
+
+def self.Branch(*args)
+	x = ClearCASE::Branch.send(:new); x.send(:is, *args); x
+end
 
 #----------------------------------------------------------------------------------------------
 
@@ -84,7 +95,7 @@ class Branches
 	end
 
 	def each
-		@names.each { |name| yield Branch.new(name) }
+		@names.each { |name| yield ClearCASE.Branch(name) }
 	end
 
 end # Branches

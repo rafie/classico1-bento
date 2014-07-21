@@ -13,14 +13,23 @@ class View
 	attr_reader :name
 	attr_writer :configspec
 
-	def def(name, *opt, root_vob: nil)
+	def is(name, *opt, root_vob: nil)
 		@name = name
-		@root_vob = root_vob if root_vob != nil
+		if root_vob
+			root_vob = root_vob.name if !root_vob.is_a?(String)
+			@root_vob = root_vob
+		end
 
 		fix_name
 	end
 
+	# if name is empty, random one is generated
+	# if name=x/.vob then name=x, root_vob=.vob
+	# if name=x/. then name=x, root_vob=.random
+	# if name=/. then name=random, root_vob=.random
+	# opt: :raw - don't prepend username to view name
 	def create(name, *opt, root_vob: nil, configspec: nil)
+		root_vob = root_vob.name if root_vob && !root_vob.is_a?(String)
 		@name = name
 		@raw_name = opt.include? :raw
 		fix_name
@@ -41,6 +50,18 @@ class View
 		self.configspec = configspec if configspec
 
 		ClearCASE::Explorer.add_view_shortcut(@name) rescue ''
+	end
+
+	def fix_name
+		if @name =~ /^([^\\]*)\/(.*)/
+			@name = $1
+			raise "conflicting root_vob specifications: #{@root_vob} and #{$2}" if defined?(@root_vob) && @root_vob != $2
+			@root_vob = $2
+		else
+			@root_vob = '' if !defined?(@root_vob)
+		end
+		@name = Bento.rand_name if @name.empty?
+		@name = System.user.downcase + "_" + @name if !@raw_name
 	end
 
 	#------------------------------------------------------------------------------------------
@@ -73,8 +94,7 @@ class View
 	end
 
 	def root_vob
-		return VOB.new(@root_vob) if @root_vob
-		nil
+		@root_vob ? ClearCASE.VOB(@root_vob) : nil
 	end
 
 	def configspec=(spec)
@@ -105,7 +125,7 @@ class View
 	# finds all files on a given branch in view
 
 	def on_branch(branch)
-		branch_name = branch.is_a?(ClearCASE::Branch) ? branch.name : Branch.new(branch).name
+		branch_name = branch.is_a?(ClearCASE::Branch) ? branch.name : ClearCASE.Branch(branch).name
 		find = System.command("pushd M:\\#{@name} & cleartool find -element brtype(#{branch_name}) -nxname -avobs -visible -print")
 		raise "elements on branch query failed for view {@name}" if find.failed?
 		ClearCASE::Elements.new(find.out.lines)
@@ -120,22 +140,8 @@ class View
 
 	#------------------------------------------------------------------------------------------
 
-	def fix_name
-		if @name =~ /^([^\\]*)\/(.*)/
-			@name = $1
-			raise "conflicting root_vob specifications: #{@root_vob} and #{$2}" if defined?(@root_vob) && @root_vob != $2
-			@root_vob = $2
-		else
-			@root_vob = '' if !defined?(@root_vob)
-		end
-		@name = Bento.rand_name if @name.empty?
-		@name = System.user.downcase + "_" + @name if !@raw_name
-	end
-
-	#------------------------------------------------------------------------------------------
-
-	def self.def(*args)
-		x = self.new; x.send(:def, *args); x
+	def self.is(*args)
+		x = self.new; x.send(:is, *args); x
 	end
 
 	def self.create(*args)
@@ -144,20 +150,20 @@ class View
 	
 	private :fix_name
 
-	private :def, :create
+	private :is, :create
 	private_class_method :new
 
 end # class View
 
 def self.View(*args)
-	x = ClearCASE::View.send(:new); x.send(:def, *args); x
+	x = ClearCASE::View.send(:new); x.send(:is, *args); x
 end
 
 #----------------------------------------------------------------------------------------------
 
 class CurrentView < View
 
-	def def(*opt, root_vob: nil)
+	def is(*opt, root_vob: nil)
 		name = System.commandx("cleartool pwv -sh", :nolog).out0
 		raise "Cannot determine current view" if name == "** NONE **"
 		super(name, *opt, root_vob: root_vob)
@@ -166,16 +172,16 @@ class CurrentView < View
 	def current_vob
 		view, vob, path = ClearCASE::Element.parse(Dir.pwd)
 		raise "No current VOB" if vob.empty?
-		VOB.new(vob)
+		ClearCASE.VOB(vob)
 	end
 
-	private :def
+	private :is
 	private_class_method :new
 
 end # class CurrentView
 
 def self.CurrentView(*args)
-	x = ClearCASE::CurrentView.send(:new); x.send(:def, *args); x
+	x = ClearCASE::CurrentView.send(:new); x.send(:is, *args); x
 end
 
 #----------------------------------------------------------------------------------------------

@@ -6,8 +6,8 @@ view = ClearCASE::View.create(ENV['USERNAME'] + '_' + Bento.rand_name, root_vob:
 view.remove!
 vob.remove!
 
-# vob = ClearCASE::VOB.new('.bikurigi')
-# view = ClearCASE::View.new('rafie_bikomene', root_vob: vob.name)
+# vob = ClearCASE.VOB('.bikurigi')
+# view = ClearCASE.View('rafie_bikomene', root_vob: vob.name)
 
 
 

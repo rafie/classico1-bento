@@ -13,16 +13,18 @@ class VOB
 
 	attr_reader :name
 
-	def def(name, *opt)
+	def is(name, *opt)
 		init_flags [:jazz], opt
-		@name = VOB.fix_name(name)
+		fix_name(name)
 	end
 
+	# if name is empty, random name is generated
+	# opt: :jazz - append random suffix to name
 	def create(name, *opt, file: nil)
 		init_flags [:jazz], opt
 		opt.delete(:jazz) # don't pass it on
 
-		@name = VOB.fix_name(name)
+		fix_name(name)
 		@jazz = true if @name.empty?
 		@name = VOB.jazz_name(@name)
 
@@ -38,6 +40,10 @@ class VOB
 		ClearCASE.PackedVOB(@file).unpack(@name)
 	end
 	
+	def fix_name(name)
+		@name = (name =~ /^[\/\\]/) ? name[1..-1] : name
+	end
+
 	#-------------------------------------------------------------------------------------------
 
 	def tag
@@ -79,10 +85,6 @@ class VOB
 	end
 
 	#-------------------------------------------------------------------------------------------
-
-	def self.fix_name(name)
-		name =~ /^[\/\\]/ ? name[1..-1] : name
-	end
 
 	def self.jazz_name(name)
 		name = "." + (name.empty? ? "" : name + "_") + Bento.rand_name
@@ -175,8 +177,8 @@ class VOB
 
 	#-------------------------------------------------------------------------------------------
 
-	def self.def(*args)
-		x = self.new; x.send(:def, *args); x
+	def self.is(*args)
+		x = self.new; x.send(:is, *args); x
 	end
 
 	def self.create(*args)
@@ -185,13 +187,13 @@ class VOB
 	
 	private :query
 
-	private :def, :create
+	private :is, :create
 	private_class_method :new
 
 end # class VOB
 
 def self.VOB(*args)
-	x = ClearCASE::VOB.send(:new); x.send(:def, *args); x
+	x = ClearCASE::VOB.send(:new); x.send(:is, *args); x
 end
 
 #----------------------------------------------------------------------------------------------
@@ -199,7 +201,7 @@ end
 class PackedVOB
 	include Bento::Class
 	
-	def def(file, *opt)
+	def is(file, *opt)
 		@file = file
 	end
 
@@ -286,8 +288,8 @@ class PackedVOB
 
 	#-------------------------------------------------------------------------------------------
 
-	def self.def(*args)
-		x = self.new; x.send(:def, *args); x
+	def self.is(*args)
+		x = self.new; x.send(:is, *args); x
 	end
 
 	def self.create(*args)
@@ -296,13 +298,13 @@ class PackedVOB
 	
 	private :fix_pool_id, :fix_permissions
 
-	private :def, :create
+	private :is, :create
 	private_class_method :new
 
 end # PackedVOB
 
 def self.PackedVOB(*args)
-	x = PackedVOB.send(:new); x.send(:def, *args); x
+	x = PackedVOB.send(:new); x.send(:is, *args); x
 end
 
 #----------------------------------------------------------------------------------------------
