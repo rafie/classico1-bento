@@ -295,7 +295,7 @@ class PackedVOB
 	def self.create(*args)
 		x = self.send(:new); x.send(:create, *args); x
 	end
-	
+
 	private :fix_pool_id, :fix_permissions
 
 	private :is, :create
@@ -312,12 +312,14 @@ end
 class VOBs
 	include Enumerable
 
+	attr_reader :names
+
 	def initialize(names)
 		@names = names
 	end
 
 	def each
-		@names.each { |vname| yield VOB(vname) }
+		@names.each { |name| yield ClearCASE.VOB(name) }
 	end
 
 end # class VOBs
