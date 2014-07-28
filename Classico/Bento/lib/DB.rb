@@ -12,40 +12,6 @@ class DB
 
 	include Bento::Class
 	
-	def initialize(*opt, path: nil, schema: nil, data: nil)
-		return if tagged_init(:create, opt, [*opt, path: path, schema: schema, data: data])
-		init
-	end
-	
-	def DB.create(*opt, path: nil, schema: nil, data: nil)
-		DB.new(:create, *opt, path: path, schema: schema, data: data)
-	end
-
-	def cleanup
-		@db.close
-		File.unlink(@path) if @temp
-#		puts "DB cleanup: " + @path if @temp
-	end
-
-	def execute(*args)
-		Results.new(@db.execute(*args))
-	end
-
-	def [](*args)
-		execute(*args)
-	end
-
-	def <<(*args)
-		@db.execute_batch(*args)
-		self
-	end
-
-	def single(*args)
-		Results.new(@db.get_first_row(*args))
-	end
-
-	private
-	
 	def init
 		@db = SQLite3::Database.new(@path)
 		@db.results_as_hash = true
@@ -55,6 +21,13 @@ class DB
 		ObjectSpace.define_finalizer(self, proc { |id| DB.finalize(id) })
 	end
 
+	def is(*opt, path: nil, schema: nil, data: nil)
+		@path = path
+		@schema = schema
+		@data = data
+		init
+	end
+	
 	def create(*opt, path: nil, schema: nil, data: nil)
 		init_flags [:temp], opt
 		
@@ -73,10 +46,49 @@ class DB
 		@db.execute_batch(File.read(data)) if data != nil
 	end
 
-	def DB.finalize(id)
+	def cleanup
+		@db.close
+		File.unlink(@path) if @temp
+#		puts "DB cleanup: " + @path if @temp
+	end
+
+	def self.finalize(id)
 		db = @@objects[id]
 		db.cleanup if db
 	end
+
+	#-------------------------------------------------------------------------------------------
+
+	def execute(*args)
+		Results.new(@db.execute(*args))
+	end
+
+	def [](*args)
+		execute(*args)
+	end
+
+	def <<(*args)
+		@db.execute_batch(*args)
+		self
+	end
+
+	def single(*args)
+		Results.new(@db.get_first_row(*args))
+	end
+
+	#-------------------------------------------------------------------------------------------
+
+	def self.is(*args)
+		x = self.new; x.send(:is, *args); x
+	end
+
+	def self.create(*args)
+		x = self.send(:new); x.send(:create, *args); x
+	end
+
+	private :init	
+	private :is, :create
+	private_class_method :new
 
 	#------------------------------------------------------------------------------------------
 	
@@ -98,11 +110,24 @@ class DB
 		def each
 			@results.each { |x| yield Results.new(x) }
 		end
+
+		def count
+			byebug
+			!@results ? 0 : @results.count
+		end
+
+		def !()
+			@results == nil
+		end
 	end
 
 	#------------------------------------------------------------------------------------------
 
 end # class DB
+
+def self.DB(*args)
+	x = DB.send(:new); x.send(:is, *args); x
+end
 
 #----------------------------------------------------------------------------------------------
 
