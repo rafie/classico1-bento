@@ -69,4 +69,13 @@ class View1 < Minitest::Test
 		refute_equal view.tag, view.name
 		assert view.root_vob != nil
 	end
+	
+	def test_2
+		vob = ClearCASE.VOB('bar')
+		#byebug
+		view = ClearCASE.View('foo', :raw, root_vob: vob)
+		assert_equal "foo/bar", view.name
+		assert_equal "foo", view.tag
+		assert_equal "bar", view.root_vob.name
+	end
 end

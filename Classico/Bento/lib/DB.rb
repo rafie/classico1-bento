@@ -112,7 +112,6 @@ class DB
 		end
 
 		def count
-			byebug
 			!@results ? 0 : @results.count
 		end
 

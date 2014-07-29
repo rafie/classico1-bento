@@ -43,8 +43,15 @@ class View
 	end
 
 	def init(name, root_vob, *opt)
-		root_vob = root_vob.name if !root_vob.respond_to?(:to_s) && root_vob.respond_to?(:name)
-		@root_vob = !root_vob || root_vob.empty? ? nil : root_vob
+		if root_vob == nil
+			@root_vob = nil
+		elsif root_vob.respond_to?(:to_s)
+			@root_vob = root_vob.to_s
+		elsif root_vob.respond_to?(:name)
+			@root_vob = root_vob.name
+		else
+			raise "invalid root_vob specification"
+		end
 
 		@raw_name = opt.include? :raw
 
@@ -97,6 +104,10 @@ class View
 		"M:/#{tag}" + (!@root_vob ? "": "/#{@root_vob}")
 	end
 
+	def path_w
+		"M:\\#{tag}" + (!@root_vob ? "": "\\#{@root_vob}")
+	end
+
 	def root
 		path
 	end
@@ -125,8 +136,8 @@ class View
 	# finds all checked out files in view
 	
 	def checkouts
-		lsco = System.command("pushd M:\\#{@name} & cleartool lsco -avobs -cview -short")
-		raise "checked-out elements query failed for viewe #{@name}" if lsco.out0 =~ /Error/
+		lsco = System.command("pushd #{path_w} & cleartool lsco -avobs -cview -short")
+		raise "checked-out elements query failed for view #{@name}" if lsco.out0 =~ /Error/
 		ClearCASE::Elements.new(lsco.out.lines)
 	end
 	
@@ -134,7 +145,7 @@ class View
 
 	def on_branch(branch)
 		branch_name = branch.is_a?(ClearCASE::Branch) ? branch.name : ClearCASE.Branch(branch).name
-		find = System.command("pushd M:\\#{@name} & cleartool find -element brtype(#{branch_name}) -nxname -avobs -visible -print")
+		find = System.command("pushd #{path_w} & cleartool find -element brtype(#{branch_name}) -nxname -avobs -visible -print")
 		raise "elements on branch query failed for view {@name}" if find.failed?
 		ClearCASE::Elements.new(find.out.lines)
 	end
@@ -142,8 +153,8 @@ class View
 	#------------------------------------------------------------------------------------------
 
 	def remove!
-		# endview = System.command("cleartool endview -server #{@name}")
-		rmview = System.command("cleartool rmview -tag #{@name}")
+		# endview = System.command("cleartool endview -server #{@tag}")
+		rmview = System.command("cleartool rmview -tag #{@tag}")
 	end
 
 	#------------------------------------------------------------------------------------------
