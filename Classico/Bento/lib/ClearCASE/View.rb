@@ -10,65 +10,68 @@ module ClearCASE
 class View             
 	include Bento::Class
 
-	attr_reader :name
+	attr_reader :name, :tag
 	attr_writer :configspec
 
 	def is(name, *opt, root_vob: nil)
-		@name = name
-		if root_vob
-			root_vob = root_vob.name if !root_vob.is_a?(String)
-			@root_vob = root_vob
-		end
-
-		fix_name
+		init(name, root_vob, *opt)
 	end
 
 	# if name is empty, random one is generated
-	# if name=x/.vob then name=x, root_vob=.vob
-	# if name=x/. then name=x, root_vob=.random
-	# if name=/. then name=random, root_vob=.random
+	# if name=x/.vob then tag=x, name=x/.vob, root_vob=.vob
+	# if name=x/. then tag=x, name=x/.random, root_vob=.random
+	# if name=/. then tag=random, name=random/.random, root_vob=.random
 	# opt: :raw - don't prepend username to view name
 	
 	def create(name, *opt, root_vob: nil, configspec: nil)
-		root_vob = root_vob.name if root_vob && !root_vob.is_a?(String)
-		@name = name
-		@raw_name = opt.include? :raw
-		fix_name
-
-		@root_vob = root_vob if root_vob != nil
+		init(name, root_vob, *opt)
 
 		region = DEFAULT_WIN_REGION
 		host = System.hostname
 		stg = LocalStorageLocation.new
-		local_stg = "#{stg.local_stg}\\#{@name}.vws"
-		global_stg = "#{stg.global_stg}\\#{@name}.vws"
+		local_stg = "#{stg.local_stg}\\#{@tag}.vws"
+		global_stg = "#{stg.global_stg}\\#{@tag}.vws"
 
-		mkview_cmd = "cleartool mkview -tag #{@name} -tmode unix -region #{region} -shareable_dos " + 
+		mkview_cmd = "cleartool mkview -tag #{@tag} -tmode unix -region #{region} -shareable_dos " + 
 			"-host #{host} -hpath #{local_stg} -gpath #{global_stg} #{local_stg}"
 		mkview = System.command(mkview_cmd)	
 		raise "failed to create view #{@name}" if mkview.failed?
 
 		self.configspec = configspec if configspec
 
-		ClearCASE::Explorer.add_view_shortcut(@name) rescue ''
+		ClearCASE::Explorer.add_view_shortcut(@tag) rescue ''
+	end
+
+	def init(name, root_vob, *opt)
+		root_vob = root_vob.name if !root_vob.respond_to?(:to_s) && root_vob.respond_to?(:name)
+		@root_vob = !root_vob || root_vob.empty? ? nil : root_vob
+
+		@raw_name = opt.include? :raw
+
+		@name = name
+		fix_name
 	end
 
 	def fix_name
 		if @name =~ /^([^\\]*)\/(.*)/
-			@name = $1
-			raise "conflicting root_vob specifications: #{@root_vob} and #{$2}" if defined?(@root_vob) && @root_vob != $2
+			@tag = $1
+			raise "conflicting root_vob specifications: #{@root_vob} and #{$2}" if @root_vob && @root_vob != $2
 			@root_vob = $2
+			@root_vob = "." + Bento.rand_name if @root_vob == "."
 		else
-			@root_vob = '' if !defined?(@root_vob)
+			@tag = @name
 		end
-		@name = Bento.rand_name if @name.empty?
-		@name = System.user.downcase + "_" + @name if !@raw_name
+
+		@tag = Bento.rand_name if @tag.strip.empty?
+		@tag = System.user.downcase + "_" + @tag if !@raw_name
+
+		@name = @root_vob ? "#{@tag}/#{@root_vob}" : @tag
 	end
 
 	#------------------------------------------------------------------------------------------
 
 	def exists?
-		lsview = System.commandx("cleartool lsview -short #{name}", :nolog)
+		lsview = System.commandx("cleartool lsview -short #{tag}", :nolog)
 		return lsview.ok?
 	end
 
@@ -77,7 +80,7 @@ class View
 	def type
 		if !@type
 			@type = :dynamic			
-			lsview = System.commandx("cleartool lsview -long #{name}", :nolog)
+			lsview = System.commandx("cleartool lsview -long #{tag}", :nolog)
 			lsview.out.lines.each do |line|
 				if line =~ /^View attributes: (.*)/
 					snap = $1
@@ -91,7 +94,11 @@ class View
 	end
 
 	def path
-		"M:/#{name}" + (defined?(@root_vob) ? "/#{@root_vob}" : "")
+		"M:/#{tag}" + (!@root_vob ? "": "/#{@root_vob}")
+	end
+
+	def root
+		path
 	end
 
 	def root_vob
@@ -99,7 +106,7 @@ class View
 	end
 
 	def configspec=(spec)
-		setcs_cmd = "cleartool setcs -tag #{@name} " + Bento.tempfile(spec)
+		setcs_cmd = "cleartool setcs -tag #{@tag} " + Bento.tempfile(spec)
 		setcs = System.commandx(setcs_cmd, what: "set configspec for view #{@name}")
 	end
 
