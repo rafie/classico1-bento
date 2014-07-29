@@ -28,6 +28,7 @@ class View
 	# if name=x/. then name=x, root_vob=.random
 	# if name=/. then name=random, root_vob=.random
 	# opt: :raw - don't prepend username to view name
+	
 	def create(name, *opt, root_vob: nil, configspec: nil)
 		root_vob = root_vob.name if root_vob && !root_vob.is_a?(String)
 		@name = name
