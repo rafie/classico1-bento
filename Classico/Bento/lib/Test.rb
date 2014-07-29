@@ -13,39 +13,44 @@ class Test < Minitest::Test
 	@@test_object = nil
 	
 	def self.genesis
-		Minitest.after_run {
- 			 @@test_object.after if @@test_object != nil
-		}
+		Minitest.after_run { @@test_object._after if @@test_object != nil }
 	end
 	genesis
 	
 	def setup
 		if !self.class.before_class
-			@@test_object.after if @@test_object != nil
-
-			before
+			@@test_object._after if @@test_object != nil
 
 			self.class.before_class = true
 			@@test_object = self
 
 			@@objects[object_id] = self
 			ObjectSpace.define_finalizer(self, proc { |id| Test.finalize(id) })
+
+			_before rescue ''
 		end
 	end
 	
 	def self.finalize(id)
 		x = @@objects[id]
-		x.finally if x
+		x._finally if x
 	end
 
-	def before
+	def _before(final = true)
+		before if final rescue ''
 	end
 
-	def after
+	def _after(final = true)
+		after if final rescue ''
 	end
-	
-	def finally
+
+	def _finally(final = true)
+		finally if final rescue ''
 	end
+
+	def before; end
+	def after; end
+	def finally; end
 end
 
 #----------------------------------------------------------------------------------------------
