@@ -344,6 +344,13 @@ class Elements
 		each { |e| e[name] = value }
 	end
 
+	#------------------------------------------------------------------------------------------
+
+	def Elements.create(glob)
+		add = System.command("ct1 add #{glob}")
+		raise "error adding elements: #{glob}" if add.failed?
+	end
+
 end # class Elements
 
 #----------------------------------------------------------------------------------------------

@@ -131,6 +131,10 @@ class View
 		elements(names).checkout
 	end
 
+	def add_files(glob)
+		ClearCASE::Elements.create(glob)
+	end
+
 	#------------------------------------------------------------------------------------------
 
 	# finds all checked out files in view

@@ -1,15 +1,14 @@
 require 'Bento'
-require 'minitest/autorun'
+require '../lib/Test'
 
-class VOB1 < Minitest::Test
+class VOB1 < Bento::Test
 
-	def setup
+	def before
 		@vob = ClearCASE::VOB.create('', file: 'test.vob.zip')
 		@view = ClearCASE::View.create('/' + @vob.name)
 	end
 
-	def teardown
-		byebug
+	def after
 		@vob.remove!
 		raise "VOB #{@vob.name} still mounted!" if File.directory?(@view.path)
 		@view.remove!
