@@ -21,7 +21,7 @@ class View
 	# if name=x/.vob then tag=x, name=x/.vob, root_vob=.vob
 	# if name=x/. then tag=x, name=x/.random, root_vob=.random
 	# if name=/. then tag=random, name=random/.random, root_vob=.random
-	# opt: :raw - don't prepend username to view name
+	# opt: :raw - username is not prepended to view tag
 	
 	def create(name, *opt, root_vob: nil, configspec: nil)
 		init(name, root_vob, *opt)
@@ -70,9 +70,9 @@ class View
 		end
 
 		@tag = Bento.rand_name if @tag.strip.empty?
-		@tag = System.user.downcase + "_" + @tag if !@raw_name
-
 		@name = @root_vob ? "#{@tag}/#{@root_vob}" : @tag
+
+		@tag = System.user.downcase + "_" + @tag if !@raw_name
 	end
 
 	#------------------------------------------------------------------------------------------

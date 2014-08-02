@@ -17,6 +17,12 @@ class Test < Minitest::Test
 	end
 	genesis
 	
+	def live_to_tell
+		yield
+		rescue => x
+			self.failures << Minitest::UnexpectedError.new(x)
+	end
+
 	def setup
 		if !self.class.before_class
 			@@test_object._after if @@test_object != nil
@@ -27,7 +33,7 @@ class Test < Minitest::Test
 			@@objects[object_id] = self
 			ObjectSpace.define_finalizer(self, proc { |id| Test.finalize(id) })
 
-			_before rescue ''
+			live_to_tell { _before }
 		end
 	end
 	
@@ -37,15 +43,15 @@ class Test < Minitest::Test
 	end
 
 	def _before(final = true)
-		before if final rescue ''
+		live_to_tell { before if final }
 	end
 
 	def _after(final = true)
-		after if final rescue ''
+		live_to_tell { after if final }
 	end
 
 	def _finally(final = true)
-		finally if final rescue ''
+		live_to_tell { finally if final }
 	end
 
 	def before; end
