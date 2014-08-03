@@ -1,0 +1,22 @@
+VOB.create(name, :jazz)
+VOB.unpack(name, :jazz, file: "file.vob.zip")
+
+
+VOB.create('jojo', :jazz) => .jojo_jazz
+VOB.create('jojo', :jazz, file: "file.vob.zip") => .jojo_jazz + unpack
+VOB.create('') => .jazz
+VOB.create(file: "file.vob.zip") => .jazz + unpack
+
+===
+
+View.create(name, *opt, root_vob: nil, configspec: nil) => user_name
+	opt: :raw
+
+View.create('')           => user_rand
+View.create('jojo')       => user_jojo
+View.create('jojo', :raw) => jojo
+View.create('', :raw)     => rand
+
+View.create('/.vob')      => user_rand, root_vob=.vob + create vob
+View.create('jojo/.', vobfile: "file.vob.zip") => user_jojo, root_vob=.rand + unpack vob
+View.create('/.', vobfile: "file.vob.zip")     => user_jojo, root_vob=.rand + unpack vob
