@@ -8,60 +8,41 @@ module ClearCASE
 #----------------------------------------------------------------------------------------------
 
 class Branch
-#	include Bento::Class
+	include Bento::Class
 
 	attr_reader :name
+
+	# consider appending admin vob to tag
 	
-	def is(name, *opt)
-		fix_name(name)
+	def is(name, *opt, tag: nil)
+		fix_name(name, tag)
 	end
 
-	def create(name, *opt, root_vob: nil)
-		fix_name(name)
+	def create(name, *opt, root_vob: nil, tag: nil)
+		fix_name(name, tag)
 		@root_vob = root_vob
 
 		@admin_vob = defined?(@root_vob) ? @root_vob : DEFAULT_ADMIN_VOB
 
-		mkbrtype = System.command("cleartool mkbrtype -nc #{@name}@/#{@admin_vob}")
-		raise "Cannot create branch #{name}" if mkbrtype.failed?
+		mkbrtype = System.command("cleartool mkbrtype -nc #{@tag}@/#{@admin_vob}")
+		raise "Cannot create branch #{name} (tag=#{tag})" if mkbrtype.failed?
 	end
 
-	def fix_name(name)
-		@name = name
-		@name += "_br" if ! @name.end_with?("_br")
+	def fix_name(name, tag)
+		name = name.to_s
+		tag = "main" if name == "main" # special case
+		@name = $1 if name =~ /(.*)_br$/
+		@tag = !tag ? (@name + "_br" : tag.to_s
 	end
 
 	#------------------------------------------------------------------------------------------
 
-#	def Branch.admin_vob
-#		begin
-#			cview = ClearCase.CurrentView
-#			admin_vob = cview.admin_vob
-#		rescue
-#			admin_vob = DEFAULT_ADMIN_VOB
-#		end
-#		
-#		admin_vob
-#	end
-
 	def admin_vob
 		@admin_vob = defined?(@root_vob) ? @root_vob : DEFAULT_ADMIN_VOB
-
-#		return @admin_vob if defined?(@admin_vob)
-#
-#		begin
-#			cview = ClearCASE.CurrentView
-#			@admin_vob = cview.admin_vob
-#		rescue
-#			@admin_vob = DEFAULT_ADMIN_VOB
-#		end
-#		
-#		@admin_vob = DEFAULT_ADMIN_VOB if ! defined?(@admin_vob)
-#		@admin_vob
 	end
 
 	def exists?
-		desc = System.command("cleartool describe brtype:#{@name}@/#{admin_vob}")
+		desc = System.command("cleartool describe brtype:#{@tag}@/#{admin_vob}")
 		return desc.ok?
 	end
 

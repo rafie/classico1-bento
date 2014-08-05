@@ -30,6 +30,11 @@ module Class
 		return true
 	end
 
+	def assert_type(val, type)
+	end
+
+	def assert_type!(val, type)
+	end
 end # BentoClass
 
 #----------------------------------------------------------------------------------------------
