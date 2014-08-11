@@ -32,7 +32,7 @@ class Branch
 		name = name.to_s
 		tag = "main" if name == "main" # special case
 		@name = $1 if name =~ /(.*)_br$/
-		@tag = !tag ? (@name + "_br" : tag.to_s
+		@tag = !tag ? @name + "_br" : tag.to_s
 	end
 
 	#------------------------------------------------------------------------------------------
