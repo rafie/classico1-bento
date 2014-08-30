@@ -1,5 +1,6 @@
-require 'Bento'
-require '../lib/Test'
+
+require '../../..Bento'
+require '../../lib/Test'
 
 class VOB1 < Bento::Test
 

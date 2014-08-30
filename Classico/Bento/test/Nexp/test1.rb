@@ -1,6 +1,6 @@
 
 require 'minitest/autorun'
-require_relative '../../lib/Nexp'
+require 'Bento'
 require 'byebug'
 
 #----------------------------------------------------------------------------------------------
