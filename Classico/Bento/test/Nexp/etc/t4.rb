@@ -6,7 +6,7 @@ text = <<END
 	(names a b c) x y)
 END
 
-ne = Nexp::Nexp.from_string(text)
+ne = Bento::Nexp.from_s(text)
 pp ~ne[:lot]
 pp ~ne[:lot][:names]
 pp ne[:lot][:names][:a]

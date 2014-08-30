@@ -1,6 +1,6 @@
 
 require 'minitest/autorun'
-require 'Nexp'
+require_relative '../../lib/Nexp'
 require 'byebug'
 
 #----------------------------------------------------------------------------------------------
@@ -22,13 +22,7 @@ class Test1 < Minitest::Test
 END
 
 	def setup
-<<<<<<< HEAD
-		@ne = Nexp.from_string(@@nexp)
-=======
-		@ne = Nexp::Nexp.from_string(@@nexp)
-		a = ~@ne[:numbers]
-		z=1
->>>>>>> origin/master
+		@ne = NExp.from_s(@@nexp)
 	end
 	
 	def test_find_atom
@@ -98,7 +92,7 @@ class Test2 < Minitest::Test
 END
 
 	def setup
-		@ne = Nexp::Nexp.from_string(@@nexp, :single)
+		@ne = Bento::Nexp.from_s(@@nexp, :single)
 	end
 
 	def test_numbers
@@ -123,7 +117,7 @@ END
 	# test if it is possible to omit brackets around 'first'
 
 	def setup
-		@ne = Nexp::Nexp.from_string(@@nexp, :single)
+		@ne = NExp.from_s(@@nexp, :single)
 	end
 
 	def test_first
@@ -147,7 +141,7 @@ END
 	end
 
 	def test_sixth
-		assert_equal nil, @ne[:numbers][:sixth]
+		assert_equal true, @ne[:numbers][:sixth].nil?
 	end
 
 	def test_map_car
@@ -207,8 +201,8 @@ END
 END
 
 	def setup
-		@ne = Nexp::Nexp.from_string(@@nexp)
-		@ne1 = Nexp::Nexp.from_string(@@nexp_single, :single)
+		@ne = NExp.from_s(@@nexp)
+		@ne1 = NExp.from_s(@@nexp_single, :single)
 	end
 
 	def test_print_all

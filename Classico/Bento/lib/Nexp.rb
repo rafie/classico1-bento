@@ -461,7 +461,7 @@ end
 #----------------------------------------------------------------------------------------------
 
 class Nexp < Nodes
-	def initialize(stream, *opt, filename: '')
+	def ctor(stream, *opt, filename: '')
 		@stream = Stream.new(stream)
 		@single = opt.include? :single
 
@@ -475,12 +475,16 @@ class Nexp < Nodes
 		@free = !@single
 	end
 
-	def self.from_string(text, *opt)
-		Nexp.new(StringIO.new(text), *opt)
+	def is(fname, *opt)
+		from_file(fname, *opt)
+	end
+
+	def from_s(text, *opt)
+		ctor(StringIO.new(text), *opt)
 	end
 	
-	def self.from_file(fname, *opt)
-		Nexp.new(File.open(fname, "r"), *opt, filename: fname)
+	def from_file(fname, *opt)
+		ctor(File.open(fname, "r"), *opt, filename: fname)
 	end
 
 	def read(root = true)
@@ -575,19 +579,35 @@ class Nexp < Nodes
 	def self.sep?(c)
 		c <= " " || c == "(" || c == ")"
 	end
+
+	def self.is(*args)
+		x = self.new; x.send(:is, *args); x
+	end
+
+	def self.from_s(*args)
+		x = self.send(:new); x.send(:from_s, *args); x
+	end
+	
+	private :ctor, :is, :from_s, :from_file
+	private_class_method :new 
+
 end # class Nexp
+
+def self.Nexp(*args)
+	x = Nexp.send(:new); x.send(:is, *args); x
+end
 
 #----------------------------------------------------------------------------------------------
 
 end # module NEXP
 
-Nexp = NEXP::Nexp
+Nexp = NEXP::Nexp # class
 
 end # module Bento
 
 #----------------------------------------------------------------------------------------------
 
-NExp = Bento::NEXP::Nexp
+NExp = Bento::NEXP::Nexp # class
 
 def Nexp(*args)
 	Bento::NEXP.Nexp(*args)

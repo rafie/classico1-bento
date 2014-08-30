@@ -18,7 +18,7 @@ nexp = <<END
 	(node c 3))
 END
 
-ne = Nexp::Nexp.from_string(nexp)
+ne = Bento::Nexp.from_s(nexp)
 puts "=== ne"
 puts ne.text
 puts "=== ne[:nodes]"
