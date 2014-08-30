@@ -1,7 +1,6 @@
 
 require 'minitest/autorun'
-require 'Bento.rb'
-require 'byebug'
+require '../../Bento'
 
 class Test1 < Minitest::Test
 	def setup
