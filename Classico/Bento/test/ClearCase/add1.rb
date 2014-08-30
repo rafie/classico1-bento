@@ -1,8 +1,9 @@
 
 require 'minitest/autorun'
-require 'Bento'
-require '../lib/Test'
 require 'fileutils'
+
+require '../../..Bento'
+require '../../lib/Test'
 
 class Test1 < Bento::Test
 

@@ -1,5 +1,5 @@
 require 'minitest/autorun'
-require 'Bento'
+require '../../..Bento'
 
 class View1 < Minitest::Test
 
