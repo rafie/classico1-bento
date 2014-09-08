@@ -1,0 +1,24 @@
+
+require 'rake/testtask'
+
+Rake::TestTask.new do |t|
+	t.libs << "../.."
+	t.test_files = FileList[
+		'class1.rb',
+		'Nexp/test1.rb'
+#		'db1.rb',
+	]
+#	t.pattern = "*.rb";
+#	t.verbose = true
+end
+
+Rake::TestTask.new("test:ccase") do |t|
+	t.libs << "../.."
+	t.test_files = FileList[
+		'ClearCase/add1.rb',
+#		'ClearCase/view1.rb',
+#		'ClearCase/view2.rb',
+#		'ClearCase/vob1.rb'
+	]
+#	t.verbose = true
+end
