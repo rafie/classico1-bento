@@ -63,8 +63,12 @@ class DB
 		Results.new(@db.execute(*args))
 	end
 
-	def [](*args)
+	def rows(*args)
 		execute(*args)
+	end
+	
+	def [](*args)
+		rows(*args)
 	end
 
 	def <<(*args)
@@ -73,7 +77,20 @@ class DB
 	end
 
 	def single(*args)
-		Results.new(@db.get_first_row(*args))
+		Result.new(@db.get_first_row(*args))
+	end
+	
+	alias_method :one, :single, :row
+
+	def insert(table, cols, *values)
+		# values_s = values.map {|x| x.is_a?(Numeric) ? x.to_s : "'#{x.to_s}'" }
+		values_s = values.map{|x| "?" }.join(",")
+		cols_s = cols.map {|x| x.to_s}.join(",")
+		insert = "insert into #{table.to_s} (#{cols_s}) values (#{values_s});"
+		execute(insert, *values)
+		begin
+			id = single("select last_insert_rowid() as id;")[:id]
+		rescue; end
 	end
 
 	#-------------------------------------------------------------------------------------------
@@ -91,7 +108,23 @@ class DB
 	private_class_method :new
 
 	#------------------------------------------------------------------------------------------
-	
+
+	class Result
+		def initialize(result)
+			@result = result
+		end
+		
+		def [](x)
+			@results[x.is_a?(Fixnum) ? x : x.to_s]
+		end
+
+		def !()
+			@results == nil
+		end
+	end			
+
+	#------------------------------------------------------------------------------------------
+
 	class Results
 		include Enumerable
 		
@@ -106,7 +139,11 @@ class DB
 				@results[x.to_s]
 			end
 		end
-		
+
+		def ord(i)
+			@results[i]
+		end
+
 		def each
 			@results.each { |x| yield Results.new(x) }
 		end
