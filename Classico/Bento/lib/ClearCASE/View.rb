@@ -43,6 +43,8 @@ class View
 	end
 
 	def init(name, root_vob, *opt)
+		init_flags([:raw], opt)
+		
 		if root_vob == nil
 			@root_vob = nil
 		elsif root_vob.respond_to?(:to_s)
@@ -52,8 +54,6 @@ class View
 		else
 			raise "invalid root_vob specification"
 		end
-
-		@raw_name = opt.include? :raw
 
 		@name = name
 		fix_name
@@ -72,7 +72,7 @@ class View
 		@tag = Bento.rand_name if @tag.strip.empty?
 		@name = @root_vob ? "#{@tag}/#{@root_vob}" : @tag
 
-		@tag = System.user.downcase + "_" + @tag if !@raw_name
+		@tag = System.user.downcase + "_" + @tag if !@raw
 	end
 
 	#------------------------------------------------------------------------------------------

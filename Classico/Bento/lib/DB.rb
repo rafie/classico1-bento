@@ -83,6 +83,10 @@ class DB
 	alias_method :one, :single
 	alias_method :row, :single
 
+	def val(*args)
+		one(*args)[0]
+	end
+
 	def insert(table, cols, *values)
 		# values_s = values.map {|x| x.is_a?(Numeric) ? x.to_s : "'#{x.to_s}'" }
 		values_s = values.map{|x| "?" }.join(",")
@@ -97,6 +101,19 @@ class DB
 
 	def inserted
 		one("select * from #{@inserted_table} where id=?", @inserted_id)
+	end
+
+	#-------------------------------------------------------------------------------------------
+
+	def transaction
+		begin
+			@db.transaction
+			yield
+			@db.commit
+		rescue Exception => x
+			@db.rollback
+			raise x
+    	end
 	end
 
 	#-------------------------------------------------------------------------------------------
