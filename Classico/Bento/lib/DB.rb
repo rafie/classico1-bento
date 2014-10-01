@@ -80,7 +80,8 @@ class DB
 		Result.new(@db.get_first_row(*args))
 	end
 	
-	alias_method :one, :single, :row
+	alias_method :one, :single
+	alias_method :row, :single
 
 	def insert(table, cols, *values)
 		# values_s = values.map {|x| x.is_a?(Numeric) ? x.to_s : "'#{x.to_s}'" }
@@ -88,9 +89,14 @@ class DB
 		cols_s = cols.map {|x| x.to_s}.join(",")
 		insert = "insert into #{table.to_s} (#{cols_s}) values (#{values_s});"
 		execute(insert, *values)
+		@inserted_table = table.to_s
 		begin
-			id = single("select last_insert_rowid() as id;")[:id]
+			@inserted_id = single("select last_insert_rowid() as id;")[:id]
 		rescue; end
+	end
+
+	def inserted
+		one("select * from #{@inserted_table} where id=?", @inserted_id)
 	end
 
 	#-------------------------------------------------------------------------------------------
@@ -115,11 +121,11 @@ class DB
 		end
 		
 		def [](x)
-			@results[x.is_a?(Fixnum) ? x : x.to_s]
+			@result[x.is_a?(Fixnum) ? x : x.to_s]
 		end
 
 		def !()
-			@results == nil
+			@result == nil
 		end
 	end			
 

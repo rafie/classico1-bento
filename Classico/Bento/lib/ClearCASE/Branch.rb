@@ -10,15 +10,19 @@ module ClearCASE
 class Branch
 	include Bento::Class
 
-	attr_reader :name
+	attr_reader :name, :tag
 
 	# consider appending admin vob to tag
-	
+
 	def is(name, *opt, tag: nil)
+		init_flags([:raw], opt)
+
 		fix_name(name, tag)
 	end
 
 	def create(name, *opt, root_vob: nil, tag: nil)
+		init_flags([:raw], opt)
+
 		fix_name(name, tag)
 		@root_vob = root_vob
 
@@ -30,8 +34,13 @@ class Branch
 
 	def fix_name(name, tag)
 		name = name.to_s
-		tag = "main" if name == "main" # special case
-		@name = $1 if name =~ /(.*)_br$/
+		if name == "main" # special case
+			@name = tag = name
+		else
+			@name = $1 if name =~ /(.*)_br$/
+			@name = System.user.downcase + "_" + @name if !@raw
+		end
+
 		@tag = !tag ? @name + "_br" : tag.to_s
 	end
 
