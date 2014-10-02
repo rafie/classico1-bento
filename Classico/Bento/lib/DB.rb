@@ -31,6 +31,7 @@ class DB
 	def create(*opt, path: nil, schema: nil, data: nil)
 		init_flags [:temp], opt
 		
+		@temp = false
 		if path == nil
 			@temp = true
 			@file = Tempfile.new('db')

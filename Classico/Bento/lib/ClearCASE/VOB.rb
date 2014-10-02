@@ -118,7 +118,7 @@ class VOB
 	
 	def unmount
 		umnt = System.command("cleartool umount #{tag}")
-		raise "cannot mount VOB #{@name}" if umnt.failed? && !mnt.err0 =~ /is not currently mounted/
+		raise "cannot mount VOB #{@name}" if umnt.failed? && !umnt.err0 =~ /is not currently mounted/
 	end
 
 	def lock
@@ -228,12 +228,12 @@ class PackedVOB
 
 	#-------------------------------------------------------------------------------------------
 
-	def unpack(name, *opt)
-		jazz = opt.include?(:jazz)
+	def unpack(name = '', *opt)
+		jazz = opt.include?(:jazz) || name.to_s.empty?
 		keep_ids = opt.include?(:keepid)
 
 		name = VOB.jazz_name(name) if jazz
-
+		
 		raise "cannot unpack, file #{@file} does not exists" if !File.exists?(@file)
 		raise "cannot unpack, vob #{name} exists" if ClearCASE.VOB(name).exist?
 
