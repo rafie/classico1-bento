@@ -7,6 +7,10 @@ module Bento
 
 module Class
 
+	def self.included(base)
+		base.extend(ClassMethods)
+	end
+
 	# if opt.include? :flag, @flag = true
 	def init_flags(flags, opt)
 		rest = opt.dup
@@ -35,7 +39,68 @@ module Class
 
 	def assert_type!(val, type)
 	end
-end # BentoClass
+
+end # Class
+
+#----------------------------------------------------------------------------------------------
+
+module ClassMethods
+
+	def constructors(*ctors)
+		class_eval("@@ctors ||= []")
+		class_eval("@@ctors += " + ctors.to_s)
+	
+		klass = self.name
+		mod = eval(klass.split("::")[0..-2].join("::"))
+
+		class_eval("private_class_method :new")
+
+		ctors.each do |ctor|
+			mod.class_eval(<<END) if ctor == :is
+				def #{klass}(*args)
+					x = #{klass}.send(:new)
+					x.send(:is, *args)
+					x
+				end
+END
+			begin
+				class_eval("private :" + ctor.to_s)
+			rescue
+			end
+
+			class_eval(<<END)
+				def self.#{ctor}(*args)
+					x = self.send(:new)
+					x.send(:#{ctor}, *args)
+					x
+				end
+END
+		end
+	end
+	
+	def method_added(m)
+		class_eval("@@ctors ||= []")
+		class_eval("private :" + m.to_s) if class_eval("@@ctors").include?(m)
+	end
+	
+	def ctors
+		class_eval("@@ctors")
+	end
+
+	#------------------------------------------------------------------------------------------
+
+	def members(*vars)
+		class_eval("@@members ||= []")
+		vars.each do |v|
+			class_eval("@@members << :#{v}")
+		end
+	end
+	
+	def class_members
+		class_eval("@@members")
+	end
+	
+end # ClassMethods
 
 #----------------------------------------------------------------------------------------------
 
