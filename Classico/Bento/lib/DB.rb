@@ -89,10 +89,14 @@ class DB
 	end
 
 	def insert(table, cols, *values)
-		# values_s = values.map {|x| x.is_a?(Numeric) ? x.to_s : "'#{x.to_s}'" }
-		values_s = values.map{|x| "?" }.join(",")
+		values_s = values.map {|x| 
+			x.is_a?(Numeric) ? x : 
+			x.is_a?(TrueClass) ? 1 :
+			x.is_a?(FalseClass) ? 0 :
+			x.to_s }
+		qmarks_s = values.map{|x| "?" }.join(",")
 		cols_s = cols.map {|x| x.to_s}.join(",")
-		insert = "insert into #{table.to_s} (#{cols_s}) values (#{values_s});"
+		insert = "insert into #{table.to_s} (#{cols_s}) values (#{qmarks_s});"
 		execute(insert, *values)
 		@inserted_table = table.to_s
 		begin

@@ -7,8 +7,11 @@ module ClearCASE
 
 #----------------------------------------------------------------------------------------------
 
-class View             
+class View
 	include Bento::Class
+
+	constructors :is, :create
+	members :tag, :name, :root_vob
 
 	attr_reader :name, :tag
 	attr_writer :configspec
@@ -173,14 +176,14 @@ class View
 	
 	private :fix_name
 
-	private :is, :create
-	private_class_method :new
+#	private :is, :create
+#	private_class_method :new
 
 end # class View
 
-def self.View(*args)
-	x = ClearCASE::View.send(:new); x.send(:is, *args); x
-end
+#def self.View(*args)
+#	x = ClearCASE::View.send(:new); x.send(:is, *args); x
+#end
 
 #----------------------------------------------------------------------------------------------
 

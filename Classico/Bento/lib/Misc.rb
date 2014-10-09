@@ -1,5 +1,6 @@
 
 require 'Digest'
+require 'erb'
 require 'rufus/mnemo'
 require 'zip'
 
