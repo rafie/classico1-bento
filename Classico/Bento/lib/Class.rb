@@ -50,7 +50,8 @@ module ClassMethods
 		class_eval("@@ctors ||= []")
 		class_eval("@@ctors += " + ctors.to_s)
 	
-		klass = self.name
+		klass = self.name.split("::")[-2..-1].join("::")
+		puts klass
 		mod = eval(klass.split("::")[0..-2].join("::"))
 
 		class_eval("private_class_method :new")

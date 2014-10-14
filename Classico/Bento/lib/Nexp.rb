@@ -1,5 +1,5 @@
 
-require 'byebug'
+# require 'Bento'
 
 #----------------------------------------------------------------------------------------------
 
@@ -197,7 +197,8 @@ class Nodes < Node
 		@list[i]
 	end
 
-	def node(x)
+	def node(x, *opt)
+		nodes_opt = opt.include?(:nodes)
 		return @list[x] if x.is_a? Fixnum
 
 		x = x.to_s
@@ -226,8 +227,12 @@ class Nodes < Node
 			cdr = n.list.drop(1)
 		end
 		return Nodes.new([], n.pos) if cdr.size == 0
-		return cdr[0] if cdr.size == 1
+		return cdr[0] if cdr.size == 1 && !nodes_opt
 		Nodes.new(cdr, cdr[0].pos)
+	end
+
+	def nodes(x, *opt)
+		node(x, :nodes)
 	end
 
 	def [](x)
@@ -430,7 +435,7 @@ class Stream
 			@col = 0
 			@line += 1
 			while c == "#"
-				@stream.fgets
+				@stream.gets
 				c = @stream.getc
 			end
 		end
@@ -461,6 +466,10 @@ end
 #----------------------------------------------------------------------------------------------
 
 class Nexp < Nodes
+	include Bento::Class
+
+	constructors :is, :from_S, :from_file
+
 	def ctor(stream, *opt, filename: '')
 		@stream = Stream.new(stream)
 		@single = opt.include? :single
@@ -474,6 +483,8 @@ class Nexp < Nodes
 		@start, @end = nodes.start, nodes.end
 		@free = !@single
 	end
+
+	private :ctor
 
 	def is(fname, *opt)
 		from_file(fname, *opt)
@@ -580,22 +591,7 @@ class Nexp < Nodes
 		c <= " " || c == "(" || c == ")"
 	end
 
-	def self.is(*args)
-		x = self.new; x.send(:is, *args); x
-	end
-
-	def self.from_s(*args)
-		x = self.send(:new); x.send(:from_s, *args); x
-	end
-	
-	private :ctor, :is, :from_s, :from_file
-	private_class_method :new 
-
 end # class Nexp
-
-def self.Nexp(*args)
-	x = Nexp.send(:new); x.send(:is, *args); x
-end
 
 #----------------------------------------------------------------------------------------------
 

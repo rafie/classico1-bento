@@ -11,6 +11,9 @@ module ClearCASE
 class VOB
 	include Bento::Class
 
+	constructors :is, :create
+	members :name, :jazz, :file, :uuid, :region, :local_vbs, :global_vbs, :mounted
+
 	attr_reader :name
 
 	def is(name, *opt)
@@ -41,6 +44,7 @@ class VOB
 	end
 	
 	def fix_name(name)
+		name = name.to_s
 		@name = (name =~ /^[\/\\]/) ? name[1..-1] : name
 	end
 
@@ -180,29 +184,17 @@ class VOB
 
 	#-------------------------------------------------------------------------------------------
 
-	def self.is(*args)
-		x = self.new; x.send(:is, *args); x
-	end
-
-	def self.create(*args)
-		x = self.send(:new); x.send(:create, *args); x
-	end
-	
 	private :query
 
-	private :is, :create
-	private_class_method :new
-
 end # class VOB
-
-def self.VOB(*args)
-	x = ClearCASE::VOB.send(:new); x.send(:is, *args); x
-end
 
 #----------------------------------------------------------------------------------------------
 
 class PackedVOB
 	include Bento::Class
+
+	constructors :is, :create
+	members :file
 	
 	def is(file, *opt)
 		@file = file
@@ -291,24 +283,9 @@ class PackedVOB
 
 	#-------------------------------------------------------------------------------------------
 
-	def self.is(*args)
-		x = self.new; x.send(:is, *args); x
-	end
-
-	def self.create(*args)
-		x = self.send(:new); x.send(:create, *args); x
-	end
-
 	private :fix_pool_id, :fix_permissions
 
-	private :is, :create
-	private_class_method :new
-
 end # PackedVOB
-
-def self.PackedVOB(*args)
-	x = PackedVOB.send(:new); x.send(:is, *args); x
-end
 
 #----------------------------------------------------------------------------------------------
 

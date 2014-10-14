@@ -46,6 +46,7 @@ element <%= root_vob_prefix %><%= vob %>/... <%= vobs[vob] %>
 element * /main/0
 END
 
+	# vobs: vobs[vobname]=tag
 	def is(vobs: nil, root_vob: nil, branch: nil, tag: nil, checks: nil)
 		@vobs = vobs == nil ? {} : vobs
 		@root_vob = root_vob.to_s
