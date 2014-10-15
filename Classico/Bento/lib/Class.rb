@@ -8,7 +8,7 @@ module Bento
 module Class
 
 	def self.included(base)
-		base.extend(ClassMethods)
+		base.extend(ClassMethods::All)
 	end
 
 	# if opt.include? :flag, @flag = true
@@ -46,12 +46,15 @@ end # Class
 
 module ClassMethods
 
+#----------------------------------------------------------------------------------------------
+
+module Constructors
+
 	def constructors(*ctors)
 		class_eval("@@ctors ||= []")
 		class_eval("@@ctors += " + ctors.to_s)
 	
 		klass = self.name.split("::")[-2..-1].join("::")
-		puts klass
 		mod = eval(klass.split("::")[0..-2].join("::"))
 
 		class_eval("private_class_method :new")
@@ -79,9 +82,9 @@ END
 		end
 	end
 	
-	def method_added(m)
-		class_eval("@@ctors ||= []")
-		class_eval("private :" + m.to_s) if class_eval("@@ctors").include?(m)
+	def self._method_added(c, m)
+		c.class_eval("@@ctors ||= []")
+		c.class_eval("private :" + m.to_s) if c.class_eval("@@ctors").include?(m)
 	end
 	
 	def ctors
@@ -101,6 +104,58 @@ END
 		class_eval("@@members")
 	end
 	
+end # Constructors
+
+#----------------------------------------------------------------------------------------------
+
+# based on Jorg W Mittag's work
+# http://stackoverflow.com/questions/3157426/how-to-simulate-java-like-annotations-in-ruby
+
+module Annotations
+
+	def annotations(m = nil)
+		return @__annotations__[m] if m
+		@__annotations__
+	end
+ 
+	def self._method_added(c, m)
+		puts "anno_method_added " + m.to_s + " to " + c.to_s
+		c.class_eval("@__annotations__ ||= {}")
+		last1 = c.class_eval("@__last_annotation__")
+		puts last1
+		c.class_eval("@__annotations__")[m] = last1 if last1
+		c.class_eval("@__last_annotation__ = nil")
+	end
+
+	def self._method_missing(c, m, *args)
+		puts "anno_method_missing " + m.to_s + "(" + args.to_s + ")" + " to " + c.to_s
+		return false unless /\A_/ =~ m
+		c.class_eval("@__last_annotation__ ||= {}")
+		c.class_eval("@__last_annotation__")[m[1..-1].to_sym] = args.size == 1 ? args.first : args
+		true
+	end
+end
+
+#----------------------------------------------------------------------------------------------
+
+module All
+	include ClassMethods::Constructors
+	include ClassMethods::Annotations
+
+	def method_added(m)
+		ClassMethods::Constructors._method_added(self, m)
+		ClassMethods::Annotations._method_added(self, m)
+		super
+	end
+
+	def method_missing(m, *args)
+		return if ClassMethods::Annotations._method_missing(self, m, *args)
+		super
+	end
+end
+
+#----------------------------------------------------------------------------------------------
+
 end # ClassMethods
 
 #----------------------------------------------------------------------------------------------

@@ -468,7 +468,8 @@ end
 class Nexp < Nodes
 	include Bento::Class
 
-	constructors :is, :from_S, :from_file
+	constructors :is, :from_s, :from_file
+	members :stream, :single, :line, :list_tops, :list, :start, :end, :free
 
 	def ctor(stream, *opt, filename: '')
 		@stream = Stream.new(stream)
