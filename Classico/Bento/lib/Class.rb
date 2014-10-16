@@ -96,7 +96,11 @@ END
 	def members(*vars)
 		class_eval("@@members ||= []")
 		vars.each do |v|
-			class_eval("@@members << :#{v}")
+			if v.is_a?(Symbol)
+				class_eval("@@members << :#{v}") 
+			else
+				class_eval("@@members << #{v.to_s}")
+			end
 		end
 	end
 	
@@ -108,7 +112,7 @@ end # Constructors
 
 #----------------------------------------------------------------------------------------------
 
-# based on Jorg W Mittag's work
+# based on Jorg W Mittag's work:
 # http://stackoverflow.com/questions/3157426/how-to-simulate-java-like-annotations-in-ruby
 
 module Annotations
@@ -119,16 +123,13 @@ module Annotations
 	end
  
 	def self._method_added(c, m)
-		puts "anno_method_added " + m.to_s + " to " + c.to_s
 		c.class_eval("@__annotations__ ||= {}")
 		last1 = c.class_eval("@__last_annotation__")
-		puts last1
 		c.class_eval("@__annotations__")[m] = last1 if last1
 		c.class_eval("@__last_annotation__ = nil")
 	end
 
 	def self._method_missing(c, m, *args)
-		puts "anno_method_missing " + m.to_s + "(" + args.to_s + ")" + " to " + c.to_s
 		return false unless /\A_/ =~ m
 		c.class_eval("@__last_annotation__ ||= {}")
 		c.class_eval("@__last_annotation__")[m[1..-1].to_sym] = args.size == 1 ? args.first : args

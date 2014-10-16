@@ -13,7 +13,7 @@ class Configspec
 	constructors :is
 	members :vobs, :root_vob, :branch, :tag, :checks
 
-	attr_reader :vobs, :root_vob, :branch, :tag, :checks
+	attr_reader :vobs_cfg, :root_vob, :branch, :tag, :checks
 
 	@@nobranch_t = <<-END
 element * CHECKEDOUT
@@ -39,16 +39,16 @@ element * <%= check %>
 element * <%= tag %>
 <% end %>
 
-<% @vobs.keys.each do |vob| %>
-element <%= root_vob_prefix %><%= vob %>/... <%= vobs[vob] %>
+<% @vobs_cfg.keys.each do |vob| %>
+element <%= root_vob_prefix %><%= vob %>/... <%= vobs_cfg[vob] %>
 <% end %>
 
 element * /main/0
 END
 
-	# vobs: vobs[vobname]=tag
-	def is(vobs: nil, root_vob: nil, branch: nil, tag: nil, checks: nil)
-		@vobs = vobs == nil ? {} : vobs
+	# vobs_cfg: vobs_cfg[vobname]=tag
+	def is(vobs_cfg: nil, root_vob: nil, branch: nil, tag: nil, checks: nil)
+		@vobs_cfg = vobs_cfg == nil ? {} : vobs_cfg
 		@root_vob = root_vob.to_s
 		@branch = branch.to_s
 		@tag = tag.to_s

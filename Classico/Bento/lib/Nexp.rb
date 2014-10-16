@@ -240,7 +240,7 @@ class Nodes < Node
 	end
 	
 	def []=(i, x)
-		node(x).value = x
+		node(i).value = x
 	end
 
 	def list
