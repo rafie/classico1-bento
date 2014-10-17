@@ -7,11 +7,13 @@ module Bento
 #----------------------------------------------------------------------------------------------
 
 class DB
+	include Bento::Class
+
+	constructors :is, :create
+
 	attr_reader :path, :db
 	@@objects = Hash.new
 
-	include Bento::Class
-	
 	def init
 		@db = SQLite3::Database.new(@path)
 		@db.results_as_hash = true
@@ -20,6 +22,8 @@ class DB
 		@@objects[object_id] = self
 		ObjectSpace.define_finalizer(self, proc { |id| DB.finalize(id) })
 	end
+	
+	private :init
 
 	def is(*opt, path: nil, schema: nil, data: nil)
 		@path = path
@@ -121,20 +125,6 @@ class DB
     	end
 	end
 
-	#-------------------------------------------------------------------------------------------
-
-	def self.is(*args)
-		x = self.new; x.send(:is, *args); x
-	end
-
-	def self.create(*args)
-		x = self.send(:new); x.send(:create, *args); x
-	end
-
-	private :init	
-	private :is, :create
-	private_class_method :new
-
 	#------------------------------------------------------------------------------------------
 
 	class Result
@@ -188,10 +178,6 @@ class DB
 	#------------------------------------------------------------------------------------------
 
 end # class DB
-
-def self.DB(*args)
-	x = DB.send(:new); x.send(:is, *args); x
-end
 
 #----------------------------------------------------------------------------------------------
 

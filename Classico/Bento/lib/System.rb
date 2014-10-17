@@ -25,14 +25,14 @@ end
 
 #----------------------------------------------------------------------------------------------
 
-def System.command(cmd, *opt)
-	return Command.new(cmd, *opt)
+def System.command(cmd, *opt, at: nil)
+	return Command.new(cmd, *opt, at: at)
 end
 
 #----------------------------------------------------------------------------------------------
 
-def System.commandx(cmd, *opt)
-	c = Command.new(cmd, *opt)
+def System.commandx(cmd, *opt, at: nil)
+	c = Command.new(cmd, *opt, at: at)
 	raise "Error in System.command(#{cmd})" if c.status != 0
 	return c
 end
@@ -42,10 +42,11 @@ end
 class Command
 	attr_reader :out, :err
 
-	def initialize(prog, *opt)
+	def initialize(prog, *opt, at: nil)
 		no_log = opt.include?(:nolog)
 		no_outlog = no_log ? true : opt.include?(:outlog)
 		no_errlog = no_log ? true : opt.include?(:errlog)
+		curdir = Dir.pwd
 	
 		when_ = Time.now.strftime("%y-%m-%d %H:%M:%S")
 		where = Dir.pwd
@@ -54,10 +55,12 @@ class Command
 		fout.close
 		ferr = Tempfile.new('syserr.')
 		ferr.close
+		Dir.chdir(at) if at
 		t0 = Time.now
 		system("#{prog} 1> #{fout.path} 2> #{ferr.path}")
 		@status = $?
 		elapsed_sec = Time.now - t0
+		Dir.chdir(curdir) if at
 	
 		if no_log
 			@out = _append(nil, fout)
