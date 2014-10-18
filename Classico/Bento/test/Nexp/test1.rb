@@ -152,7 +152,7 @@ end
 
 #----------------------------------------------------------------------------------------------
 
-class Test4 < Minitest::Test
+class Print < Minitest::Test
 
 	@@nexp = <<END
 (numbers
@@ -219,5 +219,31 @@ END
 
 	def test_print_nodes_in
 		assert_equal @@nodes_in.strip, @ne[:nodes].text(:free)
+	end
+end
+
+#----------------------------------------------------------------------------------------------
+
+class Mutation < Minitest::Test
+	@@nexp = <<END
+(numbers
+	:first 1
+	:second 2 2a
+	:third 3
+	(:more 4 5 6))
+END
+
+	def setup
+		@ne = Bento::Nexp.from_s(@@nexp, :single)
+	end
+
+	def test_add_atom
+		@ne.find(:more) << 7
+		assert_equal %w(4 5 6 7), ~@ne[:numbers][:more]
+	end
+
+	def test_add_list
+		@ne.find(:more) << [1, 2]
+		assert_equal ["4", "5", "6", ["1", "2"]], ~@ne[:numbers][:more]
 	end
 end

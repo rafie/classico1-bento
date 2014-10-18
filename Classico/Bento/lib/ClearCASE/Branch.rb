@@ -44,6 +44,8 @@ class Branch
 		@tag = !tag ? @name + "_br" : tag.to_s
 	end
 
+	private :fix_name
+
 	#------------------------------------------------------------------------------------------
 
 	def admin_vob
@@ -57,23 +59,7 @@ class Branch
 
 	#------------------------------------------------------------------------------------------
 
-	def self.is(*args)
-		x = self.new; x.send(:is, *args); x
-	end
-
-	def self.create(*args)
-		x = self.send(:new); x.send(:create, *args); x
-	end
-
-	private :fix_name
-
-	private :is, :create
-	private_class_method :new
 end # Branch
-
-def self.Branch(*args)
-	x = ClearCASE::Branch.send(:new); x.send(:is, *args); x
-end
 
 #----------------------------------------------------------------------------------------------
 

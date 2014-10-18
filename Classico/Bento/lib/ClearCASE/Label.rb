@@ -23,6 +23,8 @@ class LabelType
 		raise "Cannot create label #{name}" if mklbtype.failed?
 	end
 
+	#------------------------------------------------------------------------------------------
+
 	def admin_vob
 		@admin_vob = defined?(@root_vob) ? @root_vob : DEFAULT_ADMIN_VOB
 #		@admin_vob = DEFAULT_ADMIN_VOB if ! defined?(@admin_vob)
@@ -31,19 +33,6 @@ class LabelType
 	def exists?
 		System.command("cleartool describe lbtype:#{@name}@/#{admin_vob}").ok?
 	end
-
-	#-------------------------------------------------------------------------------------------
-
-	def self.is(*args)
-		x = self.new; x.send(:is, *args); x
-	end
-
-	def self.create(*args)
-		x = self.send(:new); x.send(:create, *args); x
-	end
-	
-	private :is, :create
-	private_class_method :new
 
 end # LabelType
 

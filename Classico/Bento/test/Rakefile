@@ -21,5 +21,11 @@ Rake::TestTask.new("test:ccase") do |t|
 #		'ClearCase/view2.rb',
 #		'ClearCase/vob1.rb'
 	]
-#	t.verbose = true
+end
+
+Rake::TestTask.new("test:nexp") do |t|
+	t.libs << "../.."
+	t.test_files = FileList[
+		'Nexp/test1.rb'
+	]
 end

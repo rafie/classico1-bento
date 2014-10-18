@@ -20,6 +20,8 @@ end
 #----------------------------------------------------------------------------------------------
 
 class Node
+	include Bento::Class
+
 	attr_reader :start, :end, :free
 
 	def initialize(pos)
@@ -166,7 +168,15 @@ class Nodes < Node
 		false
 	end
 	
-	def <<(node)
+	def <<(x)
+		if x.is_a?(Node)
+			node = x
+		elsif x.is_a?(Array)
+			node = Nodes.new
+			x.each { |y| node << y }
+		else
+			node = Atom.new(x.to_s)
+		end
 		@list << node
 	end
 	

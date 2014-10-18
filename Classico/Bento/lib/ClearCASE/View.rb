@@ -14,7 +14,6 @@ class View
 	members :tag, :name, :root_vob
 
 	attr_reader :name, :tag
-	attr_writer :configspec
 
 	def is(name, *opt, root_vob: nil)
 		init(name, root_vob, *opt)
@@ -77,6 +76,8 @@ class View
 
 		@tag = System.user.downcase + "_" + @tag if !@raw
 	end
+
+	private :fix_name
 
 	#------------------------------------------------------------------------------------------
 
@@ -166,28 +167,13 @@ class View
 
 	#------------------------------------------------------------------------------------------
 
-	def self.is(*args)
-		x = self.new; x.send(:is, *args); x
-	end
-
-	def self.create(*args)
-		x = self.send(:new); x.send(:create, *args); x
-	end
-	
-	private :fix_name
-
-#	private :is, :create
-#	private_class_method :new
-
 end # class View
-
-#def self.View(*args)
-#	x = ClearCASE::View.send(:new); x.send(:is, *args); x
-#end
 
 #----------------------------------------------------------------------------------------------
 
 class CurrentView < View
+
+	constructors :is
 
 	def is(*opt, root_vob: nil)
 		name = System.commandx("cleartool pwv -sh", :nolog).out0
@@ -195,20 +181,15 @@ class CurrentView < View
 		super(name, *opt, root_vob: root_vob)
 	end
 
+	#------------------------------------------------------------------------------------------
+
 	def current_vob
 		view, vob, path = ClearCASE::Element.parse(Dir.pwd)
 		raise "No current VOB" if vob.empty?
 		ClearCASE.VOB(vob)
 	end
 
-	private :is
-	private_class_method :new
-
 end # class CurrentView
-
-def self.CurrentView(*args)
-	x = ClearCASE::CurrentView.send(:new); x.send(:is, *args); x
-end
 
 #----------------------------------------------------------------------------------------------
 
