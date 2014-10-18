@@ -10,8 +10,8 @@ module ClearCASE
 class Configspec
 	include Bento::Class
 
-	constructors :is
-	members :vobs, :root_vob, :branch, :tag, :checks
+	constructors :is, :from_s
+	members :vobs_cfg, :root_vob, :branch, :tag, :checks
 
 	attr_reader :vobs_cfg, :root_vob, :branch, :tag, :checks
 
@@ -54,6 +54,29 @@ END
 		@tag = tag.to_s
 		@checks = checks == nil ? [] : checks
 	end
+
+	# this will parse a trivial configspec (i.e. element specs)
+	# don't expact magic here
+	def from_s(text)
+		@root_vob = ""
+		@branch = ""
+		@tag = ""
+		@checks = []
+		vobs_cfg = {}
+
+		text.lines.each do |line|
+			next if ! (line =~ /^\s*element\s+(.*)/)
+			e = $1.split(/\s+/)
+			e[0] =~ /[\/\\]([^\/\\]+)[\/\\]\.\.\./
+			vob = $1
+			tag = e[1]
+			
+			next if !vob || !tag
+			vobs_cfg[vob] = tag
+		end
+	end
+
+	#-----------------------------------------------------------------------------------------
 
 	def to_s
 		if @branch.empty?
