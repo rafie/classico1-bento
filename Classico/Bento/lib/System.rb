@@ -105,7 +105,7 @@ class Command
 	end
 
 	def err0
-		line = err.lines.first.chomp
+		line = err.lines.first
 		line == nil ? "" : line.chomp
 	end
 	
