@@ -122,7 +122,7 @@ class View
 
 	def configspec=(spec)
 		setcs_cmd = "cleartool setcs -tag #{@tag} " + Bento.tempfile(spec)
-		setcs = System.commandx(setcs_cmd, what: "set configspec for view #{@name}")
+		setcs = System.commandx(setcs_cmd) #, what: "set configspec for view #{@name}")
 	end
 
 	#------------------------------------------------------------------------------------------
