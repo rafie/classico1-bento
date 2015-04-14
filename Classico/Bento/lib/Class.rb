@@ -27,6 +27,10 @@ module Class
 		opt.select {|x| flags.include? x }
 	end
 
+	def filterout_flags(flags, opt)
+		opt.select {|x| !flags.include?(x) }
+	end
+
 	# if opt.include? tag, invole method tag(*args)
 	def tagged_init(tag, opt, args)
 		return false if !opt.include? tag
