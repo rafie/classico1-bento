@@ -57,24 +57,29 @@ module Constructors
 	def constructors(*ctors)
 		class_eval("@@ctors ||= []")
 		class_eval("@@ctors += " + ctors.to_s)
-	
-		klass = self.name.split("::")[-2..-1].join("::")
-		mod = eval(klass.split("::")[0..-2].join("::"))
+
+		fq_klass = self.name
+		
+		# for self.name == A::B::C, m_klass == B::C
+		m_klass = self.name.split("::")[-2..-1].join("::")
+		
+		klass = self.name.split("::")[-1]
+		
+		# for self.name == A::B::C, mod == A::B
+		mod = eval(self.name.split("::")[0..-2].join("::"))
 
 		class_eval("private_class_method :new")
 
 		ctors.each do |ctor|
-			mod.class_eval(<<END) if ctor == :is
-				def #{klass}(*args)
-					x = #{klass}.send(:new)
+			if ctor == :is
+				mod.define_singleton_method(klass.to_sym) do |*args|
+					x = eval(fq_klass).send(:new)
 					x.send(:is, *args)
 					x
 				end
-END
-			begin
-				class_eval("private :" + ctor.to_s)
-			rescue
 			end
+			
+			class_eval("private :" + ctor.to_s) rescue ''
 
 			class_eval(<<END)
 				def self.#{ctor}(*args)
@@ -169,8 +174,10 @@ end # module Bento
 
 #----------------------------------------------------------------------------------------------
 
-#module Kernel
-#  alias_method :bb, :byebug
-#end
+if Kernel.methods.include?(:byebug)
+module Kernel
+	alias_method :bb, :byebug
+end
+end
 
 #----------------------------------------------------------------------------------------------
