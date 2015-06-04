@@ -38,7 +38,7 @@ class Test < Minitest::Test
 		@@objects[object_id] = self
 		ObjectSpace.define_finalizer(self, proc {|id| Test.finalize(id) })
 
-		live_to_tell { _before } # really need live_to_tell?
+		_before # live_to_tell { _before }
 	end
 
 	def self.finalize(id)

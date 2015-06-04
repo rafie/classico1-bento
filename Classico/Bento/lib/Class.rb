@@ -61,7 +61,7 @@ module Constructors
 		fq_klass = self.name
 		
 		# for self.name == A::B::C, m_klass == B::C
-		m_klass = self.name.split("::")[-2..-1].join("::")
+		# m_klass = self.name.split("::")[-2..-1].join("::")
 		
 		klass = self.name.split("::")[-1]
 		
@@ -72,6 +72,7 @@ module Constructors
 
 		ctors.each do |ctor|
 			if ctor == :is
+				# this enables the A::B.C(...) syntax for C.is
 				mod.define_singleton_method(klass.to_sym) do |*args|
 					x = eval(fq_klass).send(:new)
 					x.send(:is, *args)

@@ -175,6 +175,20 @@ class View
 
 	#------------------------------------------------------------------------------------------
 
+	def start
+		System.commandx("cleartool startview #{@tag}")
+	end
+
+	def stop
+		System.commandx("cleartool endview -server #{@tag}")
+	end
+
+	def end
+		stop
+	end
+
+	#------------------------------------------------------------------------------------------
+
 	def remove!
 		# endview = System.command("cleartool endview -server #{@tag}")
 		rmview = System.command("cleartool rmview -tag #{@tag}")
