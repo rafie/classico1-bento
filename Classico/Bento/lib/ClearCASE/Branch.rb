@@ -1,5 +1,5 @@
 
-require_relative 'Common.rb'
+require_relative 'Common'
 
 #----------------------------------------------------------------------------------------------
 
@@ -12,7 +12,12 @@ class Branch
 
 	attr_reader :name, :tag
 
+	constructors :is, :create
+	members :name, :root_vob, :admin_vob
+
 	# consider appending admin vob to tag
+
+	#------------------------------------------------------------------------------------------
 
 	def is(name, *opt, tag: nil)
 		init_flags([:raw], opt)
@@ -32,12 +37,14 @@ class Branch
 		raise "Cannot create branch #{name} (tag=#{tag})" if mkbrtype.failed?
 	end
 
+	#------------------------------------------------------------------------------------------
+
 	def fix_name(name, tag)
 		name = name.to_s
 		if name == "main" # special case
 			@name = tag = name
 		else
-			@name = $1 if name =~ /(.*)_br$/
+			@name = name =~ /(.*)_br$/ ? $1 : name
 			@name = System.user.downcase + "_" + @name if !@raw
 		end
 

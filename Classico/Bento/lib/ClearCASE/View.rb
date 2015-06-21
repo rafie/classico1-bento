@@ -11,12 +11,13 @@ class View
 	include Bento::Class
 
 	constructors :is, :create
-	members :tag, :name, :root_vob
+	members :tag, :name, :root_vob, :raw, :nop
 
-	attr_reader :name, :tag
+	attr_reader :nick, :name, :tag
 
-	def is(name, *opt, root_vob: nil)
-		init(name, root_vob, *opt)
+	def is(nick, *opt, name: name, root_vob: nil)
+		raise "View: empty name" if nick.to_s.empty? && name.to_s.empty?
+		init(nick, name, root_vob, *opt)
 	end
 
 	# if name is empty, random one is generated
@@ -24,9 +25,9 @@ class View
 	# if name=x/. then tag=x, name=x/.random, root_vob=.random
 	# if name=/. then tag=random, name=random/.random, root_vob=.random
 	# opt: :raw - username is not prepended to view tag
-	
-	def create(name, *opt, root_vob: nil, configspec: nil)
-		init(name, root_vob, *opt)
+
+	def create(nick, *opt, name: nil, root_vob: nil, configspec: nil)
+		init(nick, name, root_vob, *opt)
 
 		region = DEFAULT_WIN_REGION
 		host = System.hostname
@@ -36,6 +37,9 @@ class View
 
 		mkview_cmd = "cleartool mkview -tag #{@tag} -tmode unix -region #{region} -shareable_dos " + 
 			"-host #{host} -hpath #{local_stg} -gpath #{global_stg} #{local_stg}"
+
+		return if @nop
+
 		mkview = System.command(mkview_cmd)	
 		raise "failed to create view #{@name}" if mkview.failed?
 
@@ -44,9 +48,20 @@ class View
 		ClearCASE::Explorer.add_view_shortcut(@tag) rescue ''
 	end
 
-	def init(name, root_vob, *opt)
-		init_flags([:raw], opt)
+	def init(nick, name, root_vob, *opt)
+		init_flags([:raw, :nop, :new], opt)
 		
+		raise "View: conflicting name/nick" if !nick.to_s.empty? && !name.to_s.empty?
+
+		@nick = nick.to_s
+		
+		if name
+			@name = name
+			@raw = true
+		else
+			@name = @nick
+		end
+
 		if root_vob == nil
 			@root_vob = nil
 		elsif root_vob.respond_to?(:to_s)
@@ -54,10 +69,9 @@ class View
 		elsif root_vob.respond_to?(:name)
 			@root_vob = root_vob.name
 		else
-			raise "invalid root_vob specification"
+			raise "View: invalid root_vob specification"
 		end
 
-		@name = name
 		fix_name
 	end
 
@@ -72,9 +86,10 @@ class View
 		end
 
 		@tag = Bento.rand_name if @tag.strip.empty?
-		@name = @root_vob ? "#{@tag}/#{@root_vob}" : @tag
+		@nick = @tag
 
 		@tag = System.user.downcase + "_" + @tag if !@raw
+		@name = @root_vob ? "#{@tag}/#{@root_vob}" : @tag
 	end
 
 	private :fix_name
@@ -122,7 +137,7 @@ class View
 
 	def configspec=(spec)
 		setcs_cmd = "cleartool setcs -tag #{@tag} " + Bento.tempfile(spec)
-		setcs = System.commandx(setcs_cmd, what: "set configspec for view #{@name}")
+		setcs = System.commandx(setcs_cmd) #, what: "set configspec for view #{@name}")
 	end
 
 	#------------------------------------------------------------------------------------------
@@ -156,6 +171,20 @@ class View
 		find = System.command("pushd #{path_w} & cleartool find -element brtype(#{branch_name}) -nxname -avobs -visible -print")
 		raise "elements on branch query failed for view {@name}" if find.failed?
 		ClearCASE::Elements.new(find.out.lines)
+	end
+
+	#------------------------------------------------------------------------------------------
+
+	def start
+		System.commandx("cleartool startview #{@tag}")
+	end
+
+	def stop
+		System.commandx("cleartool endview -server #{@tag}")
+	end
+
+	def end
+		stop
 	end
 
 	#------------------------------------------------------------------------------------------

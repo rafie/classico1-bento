@@ -72,6 +72,7 @@ module Constructors
 
 		ctors.each do |ctor|
 			if ctor == :is
+				# this enables the A::B.C(...) syntax for C.is
 				mod.define_singleton_method(klass.to_sym) do |*args|
 					x = eval(fq_klass).send(:new)
 					x.send(:is, *args)

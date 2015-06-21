@@ -4,19 +4,23 @@ module Bento
 
 #----------------------------------------------------------------------------------------------
 
+# The basic idea is to provide test-class-level before/after methods (in addition to test-method
+# level setup/teardown methods).
+
 class Test < Minitest::Test
 
 	@@objects = Hash.new
 
 	class << self; attr_accessor :before_class end
 	@before_class = false
+
 	@@test_object = nil
-	
-	def self.genesis
+
+	def self.class_init
 		Minitest.after_run { @@test_object._after if @@test_object != nil }
 	end
-	genesis
-	
+	class_init
+
 	def live_to_tell
 		yield
 		rescue => x
@@ -24,19 +28,19 @@ class Test < Minitest::Test
 	end
 
 	def setup
-		if !self.class.before_class
-			@@test_object._after if @@test_object != nil
+		return if self.class.before_class
 
-			self.class.before_class = true
-			@@test_object = self
+		@@test_object._after if @@test_object != nil
 
-			@@objects[object_id] = self
-			ObjectSpace.define_finalizer(self, proc { |id| Test.finalize(id) })
+		self.class.before_class = true
+		@@test_object = self
 
-			live_to_tell { _before }
-		end
+		@@objects[object_id] = self
+		ObjectSpace.define_finalizer(self, proc {|id| Test.finalize(id) })
+
+		_before # live_to_tell { _before }
 	end
-	
+
 	def self.finalize(id)
 		x = @@objects[id]
 		x._finally if x
