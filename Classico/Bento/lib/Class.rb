@@ -175,10 +175,12 @@ end # module Bento
 
 #----------------------------------------------------------------------------------------------
 
-if Kernel.methods.include?(:byebug)
 module Kernel
-	alias_method :bb, :byebug
-end
+	if Kernel.methods.include?(:byebug)
+		alias_method :bb, :byebug
+	else
+		def bb; end
+	end
 end
 
 #----------------------------------------------------------------------------------------------

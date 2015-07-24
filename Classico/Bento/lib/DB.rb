@@ -1,6 +1,5 @@
 
 require 'sqlite3'
-require 'byebug'
 
 module Bento
 
