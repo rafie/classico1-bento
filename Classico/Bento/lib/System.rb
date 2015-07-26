@@ -10,7 +10,7 @@ SystemLogFile = "c:/system.log"
 #----------------------------------------------------------------------------------------------
 
 def System.user
-	ENV['USERNAME']
+	ENV['USERNAME'].downcase
 end
 
 def System.domain
@@ -20,7 +20,7 @@ end
 #----------------------------------------------------------------------------------------------
 
 def System.hostname
-	Socket.gethostname
+	Socket.gethostname.downcase
 end
 
 #----------------------------------------------------------------------------------------------
