@@ -62,7 +62,7 @@ END
 		@branch = ""
 		@tag = ""
 		@checks = []
-		vobs_cfg = {}
+		@vobs_cfg = {}
 
 		text.lines.each do |line|
 			next if ! (line =~ /^\s*element\s+(.*)/)
@@ -72,7 +72,7 @@ END
 			tag = e[1]
 			
 			next if !vob || !tag
-			vobs_cfg[vob] = tag
+			@vobs_cfg[vob] = tag
 		end
 	end
 
