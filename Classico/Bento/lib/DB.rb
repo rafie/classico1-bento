@@ -13,6 +13,8 @@ class DB
 	attr_reader :path, :db
 	@@objects = Hash.new
 
+	#------------------------------------------------------------------------------------------
+
 	def init
 		@db = SQLite3::Database.new(@path)
 		@db.results_as_hash = true
@@ -24,6 +26,8 @@ class DB
 	
 	private :init
 
+	#------------------------------------------------------------------------------------------
+
 	def is(*opt, path: nil, schema: nil, data: nil)
 		@path = path
 		@schema = schema
@@ -31,6 +35,8 @@ class DB
 		init
 	end
 	
+	#------------------------------------------------------------------------------------------
+
 	def create(*opt, path: nil, schema: nil, data: nil)
 		init_flags [:temp], opt
 		
@@ -48,6 +54,12 @@ class DB
 
 		@db.execute_batch(File.read(schema)) if schema != nil
 		@db.execute_batch(File.read(data)) if data != nil
+	end
+
+	#------------------------------------------------------------------------------------------
+
+	def close
+		@db.close
 	end
 
 	def cleanup

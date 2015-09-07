@@ -20,16 +20,6 @@ end
 
 #----------------------------------------------------------------------------------------------
 
-def self.tempfile(text)
-	file = Tempfile.new('temp')
-	path = file.path
-	file.write(text)
-	file.close
-	path
-end
-
-#----------------------------------------------------------------------------------------------
-
 def self.unzip(zipfile, destdir = ".")
 	Zip::File.open(zipfile) do |zip|
 		zip.each do |file|
@@ -45,6 +35,8 @@ end
 def self.md5file(file)
 	Digest::MD5.file(file).hexdigest
 end
+
+#----------------------------------------------------------------------------------------------
 
 def self.md5dir(dir)
 	files = Dir["#{dir}/**/*"].reject { |f| File.directory?(f) }
