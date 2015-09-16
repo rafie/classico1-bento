@@ -73,22 +73,30 @@ module Constructors
 		ctors.each do |ctor|
 			if ctor == :is
 				# this enables the A::B.C(...) syntax for C.is
-				mod.define_singleton_method(klass.to_sym) do |*args|
-					x = eval(fq_klass).send(:new)
-					x.send(:is, *args)
-					x
-				end
+				mod.module_eval(<<-END)
+					def self.#{klass.to_sym}(*args)
+						x = eval("#{fq_klass}").send(:new)
+						x.send(:is, *args)
+						x
+					end
+				END
+
+#				mod.define_singleton_method(klass.to_sym) do |*args|
+#					x = eval(fq_klass).send(:new)
+#					x.send(:is, *args)
+#					x
+#				end
 			end
 			
 			class_eval("private :" + ctor.to_s) rescue ''
 
-			class_eval(<<END)
+			class_eval(<<-END)
 				def self.#{ctor}(*args)
 					x = self.send(:new)
 					x.send(:#{ctor}, *args)
 					x
 				end
-END
+			END
 		end
 	end
 	

@@ -13,23 +13,25 @@ class Branch
 	attr_reader :name, :tag
 
 	constructors :is, :create
-	members :name, :root_vob, :admin_vob
+	members :name, :root_vob, :admin_vob, :tag
 
 	# consider appending admin vob to tag
 
 	#------------------------------------------------------------------------------------------
 
-	def is(name, *opt, tag: nil)
+	def is(name, *opt, root_vob: nil, tag: nil)
+		
 		init_flags([:raw], opt)
-
+		@root_vob = root_vob
 		fix_name(name, tag)
+		
 	end
 
 	def create(name, *opt, root_vob: nil, tag: nil)
 		init_flags([:raw], opt)
-
-		fix_name(name, tag)
 		@root_vob = root_vob
+		fix_name(name, tag)
+		
 
 		@admin_vob = defined?(@root_vob) ? @root_vob : DEFAULT_ADMIN_VOB
 
@@ -47,7 +49,7 @@ class Branch
 			@name = name =~ /(.*)_br$/ ? $1 : name
 			@name = System.user.downcase + "_" + @name if !@raw
 		end
-
+		admin_vob
 		@tag = !tag ? @name + "_br" : tag.to_s
 	end
 
@@ -60,7 +62,7 @@ class Branch
 	end
 
 	def exists?
-		desc = System.command("cleartool describe brtype:#{@tag}@/#{admin_vob}")
+		desc = System.command("cleartool describe brtype:#{@tag}@/#{@admin_vob}")
 		return desc.ok?
 	end
 

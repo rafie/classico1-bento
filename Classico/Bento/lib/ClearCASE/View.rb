@@ -1,5 +1,6 @@
 
 require_relative 'Common'
+require 'tmpdir'
 
 #----------------------------------------------------------------------------------------------
 
@@ -136,7 +137,11 @@ class View
 	end
 
 	def configspec=(spec)
-		setcs_cmd = "cleartool setcs -tag #{@tag} " + Bento.tempfile(spec)
+
+		temp = Dir.tmpdir() 
+		tmpath=temp + "/tmpconfigspec.txt"
+		File.open(tmpath, 'w') {|f| f.write(spec) }
+		setcs_cmd = "cleartool setcs -tag #{@tag} " + tmpath
 		setcs = System.commandx(setcs_cmd) #, what: "set configspec for view #{@name}")
 	end
 
