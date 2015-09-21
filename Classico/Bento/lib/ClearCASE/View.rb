@@ -40,7 +40,7 @@ class View
 			"-host #{host} -hpath #{local_stg} -gpath #{global_stg} #{local_stg}"
 
 		return if @nop
-
+		
 		mkview = System.command(mkview_cmd)	
 		raise "failed to create view #{@name}" if mkview.failed?
 
